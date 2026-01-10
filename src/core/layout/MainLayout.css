@@ -1,0 +1,197 @@
+.layout-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: var(--background);
+}
+
+/* Sidebar */
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar-header {
+    height: 64px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    /* In expanded mode, it's just a button. In collapsed, it's the main actor */
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--surface-hover);
+    color: var(--text-main);
+}
+
+.brand-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 1;
+    transition: opacity 0.2s;
+    min-width: 0;
+    /* allows flex item to shrink properly */
+}
+
+.sidebar.collapsed .brand-info {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    overflow: hidden;
+}
+
+.brand-icon {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    overflow: hidden;
+}
+
+.sidebar.collapsed .nav-item {
+    padding: 0.50rem;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.nav-item span {
+    transition: opacity 0.2s;
+    opacity: 1;
+}
+
+.sidebar.collapsed .nav-item span {
+    opacity: 0;
+    width: 0;
+    display: none;
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.2s;
+}
+
+.nav-item:hover {
+    background-color: var(--surface-hover);
+    color: var(--text-main);
+}
+
+.nav-item.active {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.top-bar {
+    height: 64px;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    flex-shrink: 0;
+}
+
+.page-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--primary);
+    /* Simple avatar */
+    color: white;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.content-area {
+    flex: 1;
+    overflow: hidden;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}

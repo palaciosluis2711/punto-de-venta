@@ -1,0 +1,91 @@
+.table-container {
+    width: 100%;
+    /* Flex 1 to take available space if parent is flex */
+    flex: 1;
+    /* Important for flex children scrolling */
+    min-height: 0;
+    height: 100%;
+    /* Ensure it takes height if flex fails or for redundancy */
+    /* Allow horizontal scroll */
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: separate;
+    /* Required for sticky to work correctly with borders effectively in some browsers, though collapse often works too. collapse can mess up sticky borders. */
+    border-spacing: 0;
+    font-size: 0.875rem;
+}
+
+.product-table th,
+.product-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.product-table th {
+    background-color: var(--surface-hover);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 0 var(--border);
+    /* Visually replaces border-bottom for sticky element */
+}
+
+.product-table tr:last-child td {
+    border-bottom: none;
+}
+
+.product-table tr:hover {
+    background-color: var(--surface-hover);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-danger {
+    color: var(--error) !important;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: #e0e7ff;
+    /* Indigo 100 */
+    color: var(--primary);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
