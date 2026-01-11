@@ -5,7 +5,7 @@ import { useTransfers } from './hooks/useTransfers';
 import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { ArrowLeft } from 'lucide-react';
-import type { Transfer } from './types';
+
 
 export const TransferCreatePage: React.FC = () => {
     const navigate = useNavigate();

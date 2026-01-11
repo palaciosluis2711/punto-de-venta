@@ -15,7 +15,7 @@ import { useOutletContext } from 'react-router-dom';
 
 export const PosPage: React.FC = () => {
     const { activeStoreId } = useOutletContext<{ activeStoreId: string }>();
-    const { products, searchProducts, addProduct, updateProduct, updateStockBulk } = useInventory();
+    const { products, searchProducts, addProduct, updateStockBulk } = useInventory();
     const {
         cart,
         addToCart,
