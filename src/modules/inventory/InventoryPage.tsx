@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, Copy, Check } from 'lucide-react';
 import { useInventory } from './hooks/useInventory';
+import { useStores } from '../settings/hooks/useStores';
 import { ProductTable } from './components/ProductTable';
 import { ProductForm } from './components/ProductForm';
 import { Button } from '../../shared/components/Button';
@@ -10,7 +11,17 @@ import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import type { Product } from './types';
 
 export const InventoryPage: React.FC = () => {
-    const { products, addProduct, updateProduct, deleteProduct, searchProducts } = useInventory();
+    const { products, addProduct, updateProduct, deleteProduct, deleteProductsBulk, searchProducts } = useInventory();
+    const { stores } = useStores();
+    const [copiedBarcode, setCopiedBarcode] = useState(false);
+
+    const handleCopyBarcode = () => {
+        if (viewingProduct?.barcode) {
+            navigator.clipboard.writeText(viewingProduct.barcode);
+            setCopiedBarcode(true);
+            setTimeout(() => setCopiedBarcode(false), 2000);
+        }
+    };
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
     const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +67,7 @@ export const InventoryPage: React.FC = () => {
             deleteProduct(confirmDialog.id);
             setSelectedIds(prev => prev.filter(pid => pid !== confirmDialog.id));
         } else if (confirmDialog.type === 'bulk') {
-            selectedIds.forEach(id => deleteProduct(id));
+            deleteProductsBulk(selectedIds);
             setSelectedIds([]);
         }
         setConfirmDialog({ isOpen: false, type: 'single' });
@@ -196,7 +207,19 @@ export const InventoryPage: React.FC = () => {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div className="detail-item">
                                 <label className="text-muted" style={{ fontSize: '0.875rem' }}>Código de Barras</label>
-                                <p style={{ fontFamily: 'monospace', fontSize: '1.1rem' }}>{viewingProduct.barcode}</p>
+                                <div
+                                    className="flex items-center gap-2 cursor-pointer group"
+                                    onClick={handleCopyBarcode}
+                                    title="Copiar código de barras"
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                                >
+                                    <p style={{ fontFamily: 'monospace', fontSize: '1.1rem' }} className="group-hover:text-primary transition-colors">
+                                        {viewingProduct.barcode}
+                                    </p>
+                                    <Button variant="ghost" size="sm" style={{ padding: '4px', height: 'auto' }}>
+                                        {copiedBarcode ? <Check size={14} className="text-green-500" /> : <Copy size={14} className="text-muted hover:text-primary" />}
+                                    </Button>
+                                </div>
                             </div>
                             <div className="detail-item">
                                 <label className="text-muted" style={{ fontSize: '0.875rem' }}>Marca</label>
@@ -210,11 +233,35 @@ export const InventoryPage: React.FC = () => {
                                 <label className="text-muted" style={{ fontSize: '0.875rem' }}>Costo</label>
                                 <p>${viewingProduct.cost.toFixed(2)}</p>
                             </div>
-                            <div className="detail-item">
-                                <label className="text-muted" style={{ fontSize: '0.875rem' }}>Stock Actual</label>
-                                <p className={viewingProduct.stock < (viewingProduct.minStock || 10) ? 'text-danger font-bold' : ''}>
-                                    {viewingProduct.stock}
-                                </p>
+                            <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                                <label className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '0.25rem', display: 'block' }}>Existencias por Tienda</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
+                                    {stores.map(store => {
+                                        const stock = viewingProduct.inventory?.[store.id] || 0;
+                                        return (
+                                            <div key={store.id} style={{
+                                                padding: '0.5rem',
+                                                backgroundColor: 'var(--background)',
+                                                borderRadius: 'var(--radius-md)',
+                                                border: '1px solid var(--border)',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{store.name}</span>
+                                                <span style={{
+                                                    fontWeight: 600,
+                                                    color: stock < (viewingProduct.minStock || 10) ? 'var(--danger)' : 'var(--text-main)'
+                                                }}>
+                                                    {stock}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                                    Total Global: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{viewingProduct.stock}</span>
+                                </div>
                             </div>
                             <div className="detail-item">
                                 <label className="text-muted" style={{ fontSize: '0.875rem' }}>Unidad</label>

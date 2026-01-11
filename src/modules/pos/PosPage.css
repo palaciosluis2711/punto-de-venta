@@ -32,13 +32,13 @@
 }
 
 .pos-sidebar {
-    width: 400px;
+    /* Width controlled by JS inline style */
     flex-shrink: 0;
     height: 100%;
+    /* border-left is on resizer now? Or keep it? The resizer handles the visual border perhaps */
 }
 
-@media (max-width: 1024px) {
-    .pos-sidebar {
-        width: 350px;
-    }
+.pos-resizer:hover {
+    background-color: var(--primary);
+    opacity: 0.5;
 }

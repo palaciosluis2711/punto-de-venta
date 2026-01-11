@@ -1,10 +1,15 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck, ShoppingBag, ChevronDown, ArrowRightLeft } from 'lucide-react';
 import './MainLayout.css';
+
+import { useStores } from '../../modules/settings/hooks/useStores';
 
 export const MainLayout: React.FC = () => {
     const [isCollapsed, setIsCollapsed] = React.useState(true);
+    const { stores, activeStoreId, setActiveStore } = useStores();
+
+
 
     return (
         <div className="layout-container">
@@ -39,6 +44,16 @@ export const MainLayout: React.FC = () => {
                         <span>Proveedores</span>
                     </NavLink>
 
+                    <NavLink to="/purchases" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <ShoppingBag size={20} />
+                        <span>Compras</span>
+                    </NavLink>
+
+                    <NavLink to="/transfers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <ArrowRightLeft size={20} />
+                        <span>Transferencias</span>
+                    </NavLink>
+
                     <NavLink to="/pos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <ShoppingCart size={20} />
                         <span>Punto de Venta</span>
@@ -55,14 +70,36 @@ export const MainLayout: React.FC = () => {
 
             <main className="main-content">
                 <header className="top-bar">
-                    <h2 className="page-title">Bienvenido</h2>
+                    <div className="welcome-section">
+                        <h2 className="page-title">Bienvenido</h2>
+
+                        <div className="store-selector-container">
+                            <Store size={16} className="text-muted" />
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <select
+                                    value={activeStoreId}
+                                    onChange={(e) => setActiveStore(e.target.value)}
+                                    className="store-selector"
+                                    title="Cambiar Tienda Activa"
+                                >
+                                    {stores.map(store => (
+                                        <option key={store.id} value={store.id}>
+                                            {store.name} {store.isDefault ? '(Principal)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown size={14} className="text-muted" style={{ position: 'absolute', right: 0, pointerEvents: 'none' }} />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="user-profile">
                         <div className="avatar">A</div>
                         <span>Admin</span>
                     </div>
                 </header>
                 <div className="content-area">
-                    <Outlet />
+                    <Outlet context={{ activeStoreId }} />
                 </div>
             </main>
         </div>

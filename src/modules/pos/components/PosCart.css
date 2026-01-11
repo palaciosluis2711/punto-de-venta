@@ -166,3 +166,458 @@
 .checkout-btn {
     width: 100%;
 }
+
+/* Hide numbers spinners */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.qty-input {
+    appearance: textfield;
+    -moz-appearance: textfield;
+    width: 40px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 20px;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    color: var(--text-main);
+}
+
+.qty-input:focus {
+    background-color: var(--surface-hover);
+    border-radius: var(--radius-sm);
+}
+
+/* Utility to hide spinners */
+.no-spinners::-webkit-outer-spin-button,
+.no-spinners::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinners {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+/* Compact Discount UI */
+.discount-container {
+    padding: 0.75rem;
+    background-color: var(--surface-hover);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    animation: popoverFadeIn 0.2s ease-out forwards;
+}
+
+.discount-selectors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.discount-select-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 3.5rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.discount-select-btn:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+    /* Soft blue hint */
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.discount-icon-circle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.discount-select-btn:hover .discount-icon-circle {
+    transform: scale(1.1);
+}
+
+.icon-blue-soft {
+    background-color: #eff6ff;
+    /* blue-50 */
+    color: #2563eb;
+    /* blue-600 */
+}
+
+.icon-green-soft {
+    background-color: #ecfdf5;
+    /* emerald-50 */
+    color: #059669;
+    /* emerald-600 */
+}
+
+.discount-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.discount-select-btn:hover .discount-label {
+    color: #2563eb;
+    /* Use primary color on hover, assuming blue */
+}
+
+/* Expanded Input Mode */
+.discount-input-mode {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    animation: slideInRight 0.2s ease-out forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.discount-back-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.discount-back-btn:hover {
+    background-color: var(--surface-hover);
+    color: var(--text-main);
+}
+
+.discount-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.discount-input-field {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    text-align: right;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-main);
+    outline: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.discount-input-field:focus {
+    border-color: #3b82f6;
+    /* Focus color */
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+.discount-input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.icon-right {
+    right: 0.75rem;
+}
+
+.icon-left {
+    left: 0.75rem;
+}
+
+/* Adjust padding based on icon position */
+.discount-input-field.has-right-icon {
+    padding-right: 2rem;
+}
+
+.discount-input-field.has-left-icon {
+    padding-left: 1.75rem;
+}
+
+/* Applied Discount Badge */
+.discount-badge {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--surface-hover);
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.discount-badge-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.btn-icon-remove {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
+
+.btn-icon-remove:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+/* Popover Styles */
+.popover-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.popover-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Soft Buttons */
+.btn-soft {
+    font-size: 0.75rem;
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+    text-align: center;
+    border: 1px solid transparent;
+    font-weight: 600;
+}
+
+.btn-soft-primary {
+    background-color: rgba(59, 130, 246, 0.1);
+    /* Blue-ish soft */
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.btn-soft-primary:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+.btn-soft-secondary {
+    background-color: rgba(139, 92, 246, 0.1);
+    /* Purple-ish soft */
+    color: #7c3aed;
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.btn-soft-secondary:hover {
+    background-color: rgba(139, 92, 246, 0.2);
+}
+
+.btn-soft-neutral {
+    background-color: var(--surface-hover);
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+.btn-soft-neutral:hover {
+    background-color: var(--border);
+}
+
+/* Context Menu / Popover Styles */
+.options-popover {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 280px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    margin-top: 0.5rem;
+    animation: popoverFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes popoverFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.popover-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+}
+
+.popover-section {
+    margin-bottom: 1rem;
+}
+
+.popover-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    display: block;
+    color: var(--text-main);
+}
+
+.popover-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.popover-input {
+    width: 100%;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.35rem 0.5rem;
+    background-color: var(--background);
+    color: var(--text-main);
+    transition: border-color 0.2s;
+}
+
+.popover-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.popover-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.popover-btn-icon:hover {
+    background-color: #fee2e2;
+    color: var(--error);
+    border-color: #fecaca;
+}
+
+.popover-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.popover-action-btn {
+    font-size: 0.75rem;
+    background-color: var(--surface-hover);
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+    text-align: center;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.popover-action-btn:hover {
+    background-color: var(--border);
+}
+
+.popover-discount-tag {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+}
+
+.popover-warning {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    background-color: var(--surface-hover);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.popover-close {
+    font-size: 0.7rem;
+    text-decoration: underline;
+    color: var(--text-muted);
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.popover-close:hover {
+    color: var(--text-main);
+}

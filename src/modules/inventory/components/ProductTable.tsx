@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Product } from '../types';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Copy, Check, Package } from 'lucide-react';
 import { Button } from '../../../shared/components/Button';
 import './ProductTable.css';
 
@@ -21,6 +21,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
     onSelectionChange,
     onView
 }) => {
+    const [copiedId, setCopiedId] = useState<string | null>(null);
     const allSelected = products.length > 0 && products.every(p => selectedIds.includes(p.id));
     const isSelectionEnabled = !!onSelectionChange;
 
@@ -40,6 +41,12 @@ export const ProductTable: React.FC<ProductTableProps> = ({
         } else {
             onSelectionChange([...selectedIds, id]);
         }
+    };
+
+    const handleCopy = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
     };
 
     return (
@@ -85,16 +92,45 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                                         />
                                     </td>
                                 )}
-                                <td className="font-medium">{product.name}</td>
-                                <td className="text-muted">{product.barcode}</td>
+                                <td className="font-medium">
+                                    <div className="flex items-center gap-2">
+                                        {product.name}
+                                        {product.associatedProducts && product.associatedProducts.length > 0 && (
+                                            <div title="Producto Especial (Paquete)" className="text-primary">
+                                                <Package size={14} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="text-muted" onClick={e => e.stopPropagation()}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{ fontFamily: 'monospace' }}>{product.barcode}</span>
+                                        <button
+                                            onClick={() => handleCopy(product.barcode, product.id)}
+                                            className="hover:text-primary transition-colors"
+                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                                            title="Copiar código"
+                                        >
+                                            {copiedId === product.id ? (
+                                                <Check size={14} className="text-green-500" />
+                                            ) : (
+                                                <Copy size={14} className="text-muted" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </td>
                                 <td>
                                     <span className="badge">{product.category}</span>
                                 </td>
                                 <td className="text-right">${product.price.toFixed(2)}</td>
                                 <td className="text-right">
-                                    <span className={product.stock < 10 ? 'text-danger' : ''}>
-                                        {product.stock}
-                                    </span>
+                                    {product.associatedProducts && product.associatedProducts.length > 0 ? (
+                                        <span className="text-muted">-</span>
+                                    ) : (
+                                        <span className={product.stock <= (product.minStock ?? 5) ? 'text-danger font-bold' : ''}>
+                                            {product.stock}
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="text-center" onClick={e => e.stopPropagation()}>
                                     <div className="flex-center gap-2">

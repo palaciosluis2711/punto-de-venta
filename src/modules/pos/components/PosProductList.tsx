@@ -13,12 +13,19 @@ export const PosProductList: React.FC<PosProductListProps> = ({ products, onAdd 
             {products.map(product => (
                 <div key={product.id} className="pos-card" onClick={() => onAdd(product)}>
                     <div className="pos-card-content">
-                        <h3 className="pos-product-name">{product.name}</h3>
+                        <h3 className="pos-product-name flex items-center gap-2">
+                            {product.name}
+                            {product.associatedProducts && product.associatedProducts.length > 0 && (
+                                <span title="Producto Especial (Paquete)" className="text-primary">📦</span>
+                            )}
+                        </h3>
                         <span className="pos-product-cat">{product.category}</span>
                         <div className="pos-product-price">${product.price.toFixed(2)}</div>
-                        <div className={`pos-product-stock ${product.stock === 0 ? 'out-of-stock' : ''}`}>
-                            Stock: {product.stock}
-                        </div>
+                        {(!product.associatedProducts || product.associatedProducts.length === 0) && (
+                            <div className={`pos-product-stock ${product.stock === 0 ? 'out-of-stock' : ''}`}>
+                                Stock: {product.stock}
+                            </div>
+                        )}
                     </div>
                 </div>
             ))}

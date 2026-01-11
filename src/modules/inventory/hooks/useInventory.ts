@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Product } from '../types';
 
 const STORAGE_KEY = 'stationery_inventory';
@@ -35,7 +35,11 @@ export const useInventory = () => {
     };
 
     const addProduct = (product: Omit<Product, 'id'>) => {
-        const newProduct = { ...product, id: crypto.randomUUID() };
+        const newProduct = {
+            ...product,
+            id: crypto.randomUUID(),
+            inventory: product.inventory || {}
+        };
         const updated = [...products, newProduct];
         saveProducts(updated);
     };
@@ -50,16 +54,75 @@ export const useInventory = () => {
         saveProducts(updated);
     };
 
+    const deleteProductsBulk = (ids: string[]) => {
+        const updated = products.filter(p => !ids.includes(p.id));
+        saveProducts(updated);
+    };
+
     const getProductByBarcode = (barcode: string) => {
         return products.find(p => p.barcode === barcode);
     };
 
-    const searchProducts = (query: string) => {
+    const searchProducts = useCallback((query: string) => {
         const lower = query.toLowerCase();
         return products.filter(p =>
             p.name.toLowerCase().includes(lower) ||
             p.barcode.includes(lower)
         );
+    }, [products]);
+
+    const addStockToStore = (productId: string, storeId: string, quantity: number) => {
+        const updated = products.map(p => {
+            if (p.id !== productId) return p;
+
+            const currentInventory = p.inventory || {};
+            const currentStoreStock = currentInventory[storeId] || 0;
+            const newStoreStock = currentStoreStock + quantity;
+
+            const newInventory = {
+                ...currentInventory,
+                [storeId]: newStoreStock
+            };
+
+            // Recalculate global stock
+            const newGlobalStock = Object.values(newInventory).reduce((a, b) => a + b, 0);
+
+            return {
+                ...p,
+                inventory: newInventory,
+                stock: newGlobalStock
+            };
+        });
+        saveProducts(updated);
+    };
+
+    const updateStockBulk = (movements: { productId: string, storeId: string, quantity: number }[]) => {
+        // Create a map for faster lookups or just iterate if list is small.
+        // Since we need to update multiple products, potentially multiple times (though usually once per prod per store),
+        // we can iterate over the products list once and apply all pending movements for that product.
+
+        const updated = products.map(p => {
+            // Find all movements for this product
+            const productMovements = movements.filter(m => m.productId === p.id);
+            if (productMovements.length === 0) return p;
+
+            let newInventory = { ...(p.inventory || {}) };
+
+            productMovements.forEach(move => {
+                const currentStoreStock = newInventory[move.storeId] || 0;
+                newInventory[move.storeId] = currentStoreStock + move.quantity;
+            });
+
+            // Recalculate global stock
+            const newGlobalStock = Object.values(newInventory).reduce((a, b) => a + b, 0);
+
+            return {
+                ...p,
+                inventory: newInventory,
+                stock: newGlobalStock
+            };
+        });
+        saveProducts(updated);
     };
 
     return {
@@ -69,6 +132,9 @@ export const useInventory = () => {
         updateProduct,
         deleteProduct,
         getProductByBarcode,
-        searchProducts
+        searchProducts,
+        addStockToStore,
+        updateStockBulk,
+        deleteProductsBulk
     };
 };

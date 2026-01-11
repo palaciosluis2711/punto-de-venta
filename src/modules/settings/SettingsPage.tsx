@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { CategoriesSettings } from './components/CategoriesSettings';
 import { BrandsSettings } from './components/BrandsSettings';
 import { UnitsSettings } from './components/UnitsSettings';
+import { StoresSettings } from './components/StoresSettings';
+import { TaxesSettings } from './components/TaxesSettings';
 
-type SettingsTab = 'categories' | 'brands' | 'units';
+type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes';
 
 export const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SettingsTab>('categories');
@@ -65,6 +67,38 @@ export const SettingsPage: React.FC = () => {
                     >
                         Unidades
                     </button>
+                    <button
+                        onClick={() => setActiveTab('stores')}
+                        className={`text-left px-3 py-2 rounded-md font-medium transition-all ${activeTab === 'stores' ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface-hover hover:text-main'}`}
+                        style={{
+                            textAlign: 'left',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: activeTab === 'stores' ? 'var(--surface-hover)' : 'transparent',
+                            color: activeTab === 'stores' ? 'var(--primary)' : 'var(--text-muted)',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Tiendas
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('taxes')}
+                        className={`text-left px-3 py-2 rounded-md font-medium transition-all ${activeTab === 'taxes' ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface-hover hover:text-main'}`}
+                        style={{
+                            textAlign: 'left',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: activeTab === 'taxes' ? 'var(--surface-hover)' : 'transparent',
+                            color: activeTab === 'taxes' ? 'var(--primary)' : 'var(--text-muted)',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Impuestos
+                    </button>
                 </nav>
             </aside>
 
@@ -72,6 +106,8 @@ export const SettingsPage: React.FC = () => {
                 {activeTab === 'categories' && <CategoriesSettings />}
                 {activeTab === 'brands' && <BrandsSettings />}
                 {activeTab === 'units' && <UnitsSettings />}
+                {activeTab === 'stores' && <StoresSettings />}
+                {activeTab === 'taxes' && <TaxesSettings />}
             </main>
         </div>
     );
