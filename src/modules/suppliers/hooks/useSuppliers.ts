@@ -10,7 +10,7 @@ const MOCK_DATA: Supplier[] = [
         email: 'contacto@dispap.com',
         phone: '55 1234 5678',
         address: 'Av. Industrial 123, CDMX',
-        image: 'https://via.placeholder.com/50'
+        image: 'https://placehold.co/50'
     },
     {
         id: '2',
