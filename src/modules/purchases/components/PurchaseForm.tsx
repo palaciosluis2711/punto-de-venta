@@ -25,17 +25,39 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [items, setItems] = useState<PurchaseItem[]>([]);
 
-    // Initialize form with data if provided
+    // Initialize form with data if provided, or from localStorage
     useEffect(() => {
         if (initialData) {
             setStoreId(initialData.storeId);
             setSupplierId(initialData.supplierId);
-            // Format date to YYYY-MM-DD for input[type="date"]
             const formattedDate = new Date(initialData.date).toISOString().split('T')[0];
             setDate(formattedDate);
             setItems(initialData.items);
+        } else {
+            // Try to load from localStorage
+            const savedState = localStorage.getItem('app_purchase_form_state');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    setStoreId(parsed.storeId || '');
+                    setSupplierId(parsed.supplierId || '');
+                    // Date usually defaults to today, but if we want to persist it:
+                    if (parsed.date) setDate(parsed.date);
+                    if (parsed.items) setItems(parsed.items);
+                } catch (e) {
+                    console.error("Failed to load purchase draft", e);
+                }
+            }
         }
     }, [initialData]);
+
+    // Persist state to localStorage
+    useEffect(() => {
+        if (!initialData) {
+            const stateToSave = { storeId, supplierId, date, items };
+            localStorage.setItem('app_purchase_form_state', JSON.stringify(stateToSave));
+        }
+    }, [storeId, supplierId, date, items, initialData]);
 
     // Item adding state
     const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +131,12 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Clear draft
+        if (!initialData) {
+            localStorage.removeItem('app_purchase_form_state');
+        }
+
         if (!storeId || !supplierId || items.length === 0) return;
 
         const selectedStore = stores.find(s => s.id === storeId);

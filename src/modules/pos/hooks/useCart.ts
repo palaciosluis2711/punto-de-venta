@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Product } from '../../inventory/types';
 
 export interface CartItem extends Product {
@@ -15,7 +15,16 @@ export interface CartItem extends Product {
 }
 
 export const useCart = () => {
-    const [cart, setCart] = useState<CartItem[]>([]);
+    // Initialize from localStorage
+    const [cart, setCart] = useState<CartItem[]>(() => {
+        const saved = localStorage.getItem('app_pos_cart');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Sync to localStorage
+    useEffect(() => {
+        localStorage.setItem('app_pos_cart', JSON.stringify(cart));
+    }, [cart]);
 
     const addToCart = (product: Product, quantity = 1, priceOverride?: number) => {
         setCart(prev => {
@@ -85,7 +94,10 @@ export const useCart = () => {
         }));
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = () => {
+        setCart([]);
+        localStorage.removeItem('app_pos_cart');
+    };
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 

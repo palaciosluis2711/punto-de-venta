@@ -32,12 +32,36 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
             setDate(formattedDate);
             setItems(initialData.items);
         } else {
-            // Default Source Store to Active Store if creating new
-            if (activeStoreId) {
+            // Restore from localStorage first
+            const savedState = localStorage.getItem('app_transfer_form_state');
+            let restored = false;
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    setSourceStoreId(parsed.sourceStoreId || '');
+                    setDestinationStoreId(parsed.destinationStoreId || '');
+                    if (parsed.items) setItems(parsed.items);
+                    restored = true;
+                } catch (e) {
+                    console.error("Failed to restore transfer draft", e);
+                }
+            }
+
+            // Default Source Store to Active Store if creating new AND nothing restored (or override if preferred? Let's check)
+            // If restored definition exists, we assume user wants that. If not, default.
+            if (!restored && activeStoreId) {
                 setSourceStoreId(activeStoreId);
             }
         }
     }, [initialData, activeStoreId]);
+
+    // Persist state
+    useEffect(() => {
+        if (!initialData) {
+            const stateToSave = { sourceStoreId, destinationStoreId, items };
+            localStorage.setItem('app_transfer_form_state', JSON.stringify(stateToSave));
+        }
+    }, [sourceStoreId, destinationStoreId, items, initialData]);
 
     // Item adding state
     const [searchTerm, setSearchTerm] = useState('');
@@ -108,6 +132,12 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Clear draft
+        if (!initialData) {
+            localStorage.removeItem('app_transfer_form_state');
+        }
+
         if (!sourceStoreId || !destinationStoreId || items.length === 0) return;
         if (sourceStoreId === destinationStoreId) {
             // Should be prevented by UI but keeping validation
