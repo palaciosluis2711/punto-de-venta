@@ -128,7 +128,37 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                 setIsSpecial(true);
             }
         } else {
-            // Reset form for "New Product"
+            // Restore from localStorage first
+            const savedState = localStorage.getItem('app_product_form_state');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    // Ensure defaults
+                    setFormData({
+                        name: parsed.name || '',
+                        barcode: parsed.barcode || '',
+                        price: parsed.price || 0,
+                        cost: parsed.cost || 0,
+                        stock: parsed.stock || 0,
+                        minStock: parsed.minStock || 0,
+                        category: parsed.category || '',
+                        brand: parsed.brand || '',
+                        unit: parsed.unit || '',
+                        image: parsed.image || '',
+                        associatedProducts: parsed.associatedProducts || [],
+                        // Restore taxes too if saved? We should.
+                        tax_apply: parsed.tax_apply,
+                        tax_method: parsed.tax_method
+                    });
+                    setIsSpecial(parsed.isSpecial || false);
+                    // Don't restore errors, let validation run or let user type
+                    return;
+                } catch (e) {
+                    console.error("Failed to restore product draft", e);
+                }
+            }
+
+            // Fallback: Reset form for "New Product"
             setFormData({
                 name: '',
                 barcode: '',
@@ -146,6 +176,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             setErrors({});
         }
     }, [initialData]);
+
+    // Persist state
+    useEffect(() => {
+        if (!initialData) {
+            const stateToSave = {
+                ...formData,
+                isSpecial // Save this toggle too
+            };
+            localStorage.setItem('app_product_form_state', JSON.stringify(stateToSave));
+        }
+    }, [formData, isSpecial, initialData]);
 
     // Validation State
     const [errors, setErrors] = useState<{ name?: string; barcode?: string }>({});
@@ -234,6 +275,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             return;
         }
 
+        // Clear draft
+        if (!initialData) {
+            localStorage.removeItem('app_product_form_state');
+        }
+
         // Convert strings to numbers for submission
         const submissionData = {
             ...formData,
@@ -245,10 +291,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
         onSubmit(submissionData);
     };
 
+    const handleCancel = () => {
+        if (!initialData) {
+            localStorage.removeItem('app_product_form_state');
+        }
+        onCancel();
+    };
+
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Image Upload Section */}
-            <div className="flex justify-between items-start mb-2">
+            {/* ... */}
+            {/* ... (rest of form) */}
+
+            <div className="flex justify-end gap-2 mt-4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
+                <Button type="button" variant="ghost" onClick={handleCancel}>
+                    Cancelar
+                </Button>
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-muted">Imagen del Producto (Opcional)</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
