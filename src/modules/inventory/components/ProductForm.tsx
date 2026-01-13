@@ -30,19 +30,108 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
     // Special Product Toggle State
     const [isSpecial, setIsSpecial] = useState(false);
 
-    const [formData, setFormData] = useState<Omit<Product, 'id'>>({
-        name: '',
-        barcode: '',
-        price: 0,
-        cost: 0,
-        stock: 0,
-        minStock: 0,
-        category: '',
-        brand: '',
-        unit: '',
-        image: '',
-        associatedProducts: []
+    // State initialization helper
+    const getInitialState = (): Omit<Product, 'id'> => {
+        if (initialData) {
+            const { id, ...rest } = initialData;
+            return {
+                ...rest,
+                associatedProducts: rest.associatedProducts?.map(ap => ({
+                    ...ap,
+                    bundlePrice: ap.bundlePrice ?? 0
+                }))
+            };
+        }
+
+        // Try to restore from localStorage if New Product
+        const savedState = localStorage.getItem('app_product_form_state');
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                return {
+                    name: parsed.name || '',
+                    barcode: parsed.barcode || '',
+                    price: parsed.price || 0,
+                    cost: parsed.cost || 0,
+                    stock: parsed.stock || 0,
+                    minStock: parsed.minStock || 0,
+                    category: parsed.category || '',
+                    brand: parsed.brand || '',
+                    unit: parsed.unit || '',
+                    image: parsed.image || '',
+                    associatedProducts: parsed.associatedProducts || [],
+                    tax_apply: parsed.tax_apply,
+                    tax_method: parsed.tax_method
+                };
+            } catch (e) {
+                console.error("Failed to restore product draft", e);
+            }
+        }
+
+        // Default empty state
+        return {
+            name: '',
+            barcode: '',
+            price: 0,
+            cost: 0,
+            stock: 0,
+            minStock: 0,
+            category: '',
+            brand: '',
+            unit: '',
+            image: '',
+            associatedProducts: []
+        };
+    };
+
+    const [formData, setFormData] = useState<Omit<Product, 'id'>>(getInitialState);
+
+    // Initial Special Toggle State
+    const [isSpecial, setIsSpecial] = useState(() => {
+        if (initialData?.associatedProducts && initialData.associatedProducts.length > 0) return true;
+        if (!initialData) {
+            const savedState = localStorage.getItem('app_product_form_state');
+            if (savedState) {
+                try {
+                    return JSON.parse(savedState).isSpecial || false;
+                } catch { }
+            }
+        }
+        return false;
     });
+
+    useEffect(() => {
+        // When initialData changes (e.g. switching between Edit/New), strictly reset/set form data
+        // This is important because the component might not unmount.
+        const newState = getInitialState();
+        setFormData(newState);
+
+        if (initialData?.associatedProducts && initialData.associatedProducts.length > 0) {
+            setIsSpecial(true);
+        } else if (!initialData) {
+            const savedState = localStorage.getItem('app_product_form_state');
+            if (savedState) {
+                try {
+                    setIsSpecial(JSON.parse(savedState).isSpecial || false);
+                } catch {
+                    setIsSpecial(false);
+                }
+            } else {
+                setIsSpecial(false);
+            }
+        }
+    }, [initialData]);
+
+    // Persist state
+    useEffect(() => {
+        if (!initialData) {
+            const stateToSave = {
+                ...formData,
+                isSpecial
+            };
+            localStorage.setItem('app_product_form_state', JSON.stringify(stateToSave));
+        }
+    }, [formData, isSpecial, initialData]);
 
     const handleGenerateBarcode = () => {
         // Generate a random 12-digit barcode
@@ -110,83 +199,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             };
         });
     };
-
-    useEffect(() => {
-        if (initialData) {
-            const { id, ...rest } = initialData;
-            // Ensure associatedProducts has bundlePrice if missing (migration)
-            const sanitizedData = {
-                ...rest,
-                associatedProducts: rest.associatedProducts?.map(ap => ({
-                    ...ap,
-                    bundlePrice: ap.bundlePrice ?? 0 // Default to 0 if not present
-                }))
-            };
-            setFormData(sanitizedData);
-
-            if (rest.associatedProducts && rest.associatedProducts.length > 0) {
-                setIsSpecial(true);
-            }
-        } else {
-            // Restore from localStorage first
-            const savedState = localStorage.getItem('app_product_form_state');
-            if (savedState) {
-                try {
-                    const parsed = JSON.parse(savedState);
-                    // Ensure defaults
-                    setFormData({
-                        name: parsed.name || '',
-                        barcode: parsed.barcode || '',
-                        price: parsed.price || 0,
-                        cost: parsed.cost || 0,
-                        stock: parsed.stock || 0,
-                        minStock: parsed.minStock || 0,
-                        category: parsed.category || '',
-                        brand: parsed.brand || '',
-                        unit: parsed.unit || '',
-                        image: parsed.image || '',
-                        associatedProducts: parsed.associatedProducts || [],
-                        // Restore taxes too if saved? We should.
-                        tax_apply: parsed.tax_apply,
-                        tax_method: parsed.tax_method
-                    });
-                    setIsSpecial(parsed.isSpecial || false);
-                    // Don't restore errors, let validation run or let user type
-                    return;
-                } catch (e) {
-                    console.error("Failed to restore product draft", e);
-                }
-            }
-
-            // Fallback: Reset form for "New Product"
-            setFormData({
-                name: '',
-                barcode: '',
-                price: 0,
-                cost: 0,
-                stock: 0,
-                minStock: 0,
-                category: '',
-                brand: '',
-                unit: '',
-                image: '',
-                associatedProducts: []
-            });
-            setIsSpecial(false);
-            setErrors({});
-        }
-    }, [initialData]);
-
-    // Persist state
-    useEffect(() => {
-        if (!initialData) {
-            const stateToSave = {
-                ...formData,
-                isSpecial // Save this toggle too
-            };
-            localStorage.setItem('app_product_form_state', JSON.stringify(stateToSave));
-        }
-    }, [formData, isSpecial, initialData]);
 
     // Validation State
     const [errors, setErrors] = useState<{ name?: string; barcode?: string }>({});

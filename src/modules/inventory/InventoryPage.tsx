@@ -59,7 +59,24 @@ export const InventoryPage: React.FC = () => {
         setIsDetailsOpen(true);
     };
 
-    // ... (rest of delete handlers unchanged)
+    const handleDeleteClick = (id: string) => {
+        setConfirmDialog({ isOpen: true, type: 'single', id });
+    };
+
+    const handleBulkDelete = () => {
+        setConfirmDialog({ isOpen: true, type: 'bulk' });
+    };
+
+    const confirmDelete = () => {
+        if (confirmDialog.type === 'single' && confirmDialog.id) {
+            deleteProduct(confirmDialog.id);
+            setSelectedIds(prev => prev.filter(pid => pid !== confirmDialog.id));
+        } else if (confirmDialog.type === 'bulk') {
+            deleteProductsBulk(selectedIds);
+            setSelectedIds([]);
+        }
+        setConfirmDialog({ isOpen: false, type: 'single' });
+    };
 
     const handleFormSubmit = (data: Omit<Product, 'id'>) => {
         if (editingProduct) {
