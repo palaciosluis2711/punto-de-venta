@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCategories, type Category } from '../hooks/useCategories';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
@@ -19,6 +19,15 @@ export const CategoriesSettings: React.FC = () => {
 
     // Edit State
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+    // Persistence Effect
+    useEffect(() => {
+        const editId = localStorage.getItem('app_settings_categories_edit_id');
+        if (editId && categories.length > 0 && !editingCategory) {
+            const found = categories.find(c => c.id === editId);
+            if (found) setEditingCategory(found);
+        }
+    }, [categories]);
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -140,7 +149,10 @@ export const CategoriesSettings: React.FC = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => setEditingCategory(category)}
+                                                        onClick={() => {
+                                                            setEditingCategory(category);
+                                                            localStorage.setItem('app_settings_categories_edit_id', category.id);
+                                                        }}
                                                         title="Editar"
                                                     >
                                                         <Edit size={16} />
@@ -192,7 +204,10 @@ export const CategoriesSettings: React.FC = () => {
             {/* Edit Modal */}
             <Modal
                 isOpen={!!editingCategory}
-                onClose={() => setEditingCategory(null)}
+                onClose={() => {
+                    setEditingCategory(null);
+                    localStorage.removeItem('app_settings_categories_edit_id');
+                }}
                 title="Editar Categoría"
             >
                 {editingCategory && (
@@ -209,7 +224,10 @@ export const CategoriesSettings: React.FC = () => {
                             onChange={e => setEditingCategory({ ...editingCategory, description: e.target.value })}
                         />
                         <div className="modal-actions">
-                            <Button type="button" variant="outline" onClick={() => setEditingCategory(null)}>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingCategory(null);
+                                localStorage.removeItem('app_settings_categories_edit_id');
+                            }}>
                                 Cancelar
                             </Button>
                             <Button type="submit" icon={<Save size={18} />}>

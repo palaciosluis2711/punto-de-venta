@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Trash2, Copy, Check } from 'lucide-react';
+import { Plus, Search, Trash2, Copy, Check, X } from 'lucide-react';
 import { useInventory } from './hooks/useInventory';
 import { useStores } from '../settings/hooks/useStores';
 import { ProductTable } from './components/ProductTable';
@@ -23,21 +23,48 @@ export const InventoryPage: React.FC = () => {
         }
     };
     const [isModalOpen, setIsModalOpen] = useState(() => {
-        return localStorage.getItem('app_inventory_new_product_open') === 'true';
+        return localStorage.getItem('app_inventory_new_product_open') === 'true' || !!localStorage.getItem('app_inventory_edit_id');
     });
     const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [viewingProduct, setViewingProduct] = useState<Product | undefined>(undefined);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(() => {
+        return localStorage.getItem('app_inventory_details_open') === 'true';
+    });
 
+    // Restore editing and viewing state logic
+    React.useEffect(() => {
+        const editId = localStorage.getItem('app_inventory_edit_id');
+        if (editId && products.length > 0 && !editingProduct) {
+            const productToEdit = products.find(p => p.id === editId);
+            if (productToEdit) {
+                setEditingProduct(productToEdit);
+                if (localStorage.getItem('app_inventory_new_product_open') === 'true') {
+                    setIsModalOpen(true);
+                }
+            }
+        }
+
+        // Restore viewing state logic
+        const viewId = localStorage.getItem('app_inventory_view_id');
+        if (viewId && products.length > 0 && !viewingProduct) {
+            const productToView = products.find(p => p.id === viewId);
+            if (productToView) {
+                setViewingProduct(productToView);
+                if (localStorage.getItem('app_inventory_details_open') === 'true') {
+                    setIsDetailsOpen(true);
+                }
+            }
+        }
+    }, [products, editingProduct, viewingProduct]);
+
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
         type: 'single' | 'bulk';
         id?: string;
     }>({ isOpen: false, type: 'single' });
-
-    const [viewingProduct, setViewingProduct] = useState<Product | undefined>(undefined);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
     const filteredProducts = searchQuery ? searchProducts(searchQuery) : products;
 
@@ -45,18 +72,21 @@ export const InventoryPage: React.FC = () => {
         setEditingProduct(undefined);
         setIsModalOpen(true);
         localStorage.setItem('app_inventory_new_product_open', 'true');
+        localStorage.removeItem('app_inventory_edit_id');
     };
 
     const handleEditClick = (product: Product) => {
         setEditingProduct(product);
         setIsModalOpen(true);
-        // We don't persist Edit mode for now, so treat as 'false' for new product persistence
         localStorage.setItem('app_inventory_new_product_open', 'false');
+        localStorage.setItem('app_inventory_edit_id', product.id);
     };
 
     const handleViewClick = (product: Product) => {
         setViewingProduct(product);
         setIsDetailsOpen(true);
+        localStorage.setItem('app_inventory_details_open', 'true');
+        localStorage.setItem('app_inventory_view_id', product.id);
     };
 
     const handleDeleteClick = (id: string) => {
@@ -86,11 +116,16 @@ export const InventoryPage: React.FC = () => {
         }
         setIsModalOpen(false);
         localStorage.setItem('app_inventory_new_product_open', 'false');
+        localStorage.removeItem('app_inventory_edit_id');
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (keepDraft: boolean = false) => {
         setIsModalOpen(false);
         localStorage.setItem('app_inventory_new_product_open', 'false');
+        localStorage.removeItem('app_inventory_edit_id');
+        if (!keepDraft) {
+            localStorage.removeItem('app_product_edit_state');
+        }
     };
 
 
@@ -129,6 +164,18 @@ export const InventoryPage: React.FC = () => {
                             icon={<Search size={18} />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            rightElement={
+                                searchQuery ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setSearchQuery('')}
+                                        icon={<X size={16} />}
+                                        style={{ padding: '0.25rem', height: 'auto', width: 'auto' }}
+                                        title="Limpiar búsqueda"
+                                    />
+                                ) : undefined
+                            }
                         />
                     </div>
 
@@ -168,7 +215,7 @@ export const InventoryPage: React.FC = () => {
                             <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
                                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
                             </h2>
-                            <Button variant="ghost" size="sm" onClick={handleCloseModal}>
+                            <Button variant="ghost" size="sm" onClick={() => handleCloseModal(false)}>
                                 Cerrar
                             </Button>
                         </div>
@@ -184,7 +231,11 @@ export const InventoryPage: React.FC = () => {
             {/* Details Modal */}
             <Modal
                 isOpen={isDetailsOpen}
-                onClose={() => setIsDetailsOpen(false)}
+                onClose={() => {
+                    setIsDetailsOpen(false);
+                    localStorage.setItem('app_inventory_details_open', 'false');
+                    localStorage.removeItem('app_inventory_view_id');
+                }}
                 title="Detalles del Producto"
             >
                 {viewingProduct && (
@@ -246,34 +297,68 @@ export const InventoryPage: React.FC = () => {
                                 <p>${viewingProduct.cost.toFixed(2)}</p>
                             </div>
                             <div className="detail-item" style={{ gridColumn: 'span 2' }}>
-                                <label className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '0.25rem', display: 'block' }}>Existencias por Tienda</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
-                                    {stores.map(store => {
-                                        const stock = viewingProduct.inventory?.[store.id] || 0;
-                                        return (
-                                            <div key={store.id} style={{
-                                                padding: '0.5rem',
-                                                backgroundColor: 'var(--background)',
-                                                borderRadius: 'var(--radius-md)',
-                                                border: '1px solid var(--border)',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center'
-                                            }}>
-                                                <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{store.name}</span>
-                                                <span style={{
-                                                    fontWeight: 600,
-                                                    color: stock < (viewingProduct.minStock || 10) ? 'var(--danger)' : 'var(--text-main)'
-                                                }}>
-                                                    {stock}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                                    Total Global: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{viewingProduct.stock}</span>
-                                </div>
+                                {viewingProduct.associatedProducts && viewingProduct.associatedProducts.length > 0 ? (
+                                    <>
+                                        <label className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '0.5rem', display: 'block' }}>Contenido del Paquete (Productos Asociados)</label>
+                                        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                                            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+                                                <thead style={{ backgroundColor: 'var(--muted)', color: 'var(--text-muted)' }}>
+                                                    <tr>
+                                                        <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: 500 }}>Producto</th>
+                                                        <th style={{ padding: '0.5rem', textAlign: 'center', fontWeight: 500 }}>Cant.</th>
+                                                        <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 500 }}>Precio Asignado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {viewingProduct.associatedProducts.map((item, idx) => {
+                                                        const assocProd = products.find(p => p.id === item.productId);
+                                                        return (
+                                                            <tr key={idx} style={{ borderTop: '1px solid var(--border)' }}>
+                                                                <td style={{ padding: '0.5rem' }}>
+                                                                    <div style={{ fontWeight: 500 }}>{assocProd?.name || 'Producto Desconocido'}</div>
+                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{assocProd?.barcode}</div>
+                                                                </td>
+                                                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>{item.quantity}</td>
+                                                                <td style={{ padding: '0.5rem', textAlign: 'right' }}>${(item.bundlePrice || 0).toFixed(2)}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <label className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '0.25rem', display: 'block' }}>Existencias por Tienda</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
+                                            {stores.map(store => {
+                                                const stock = viewingProduct.inventory?.[store.id] || 0;
+                                                return (
+                                                    <div key={store.id} style={{
+                                                        padding: '0.5rem',
+                                                        backgroundColor: 'var(--background)',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        border: '1px solid var(--border)',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}>
+                                                        <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{store.name}</span>
+                                                        <span style={{
+                                                            fontWeight: 600,
+                                                            color: stock < (viewingProduct.minStock || 10) ? 'var(--danger)' : 'var(--text-main)'
+                                                        }}>
+                                                            {stock}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                                            Total Global: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{viewingProduct.stock}</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             <div className="detail-item">
                                 <label className="text-muted" style={{ fontSize: '0.875rem' }}>Unidad</label>
@@ -285,7 +370,11 @@ export const InventoryPage: React.FC = () => {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'end' }}>
-                            <Button onClick={() => setIsDetailsOpen(false)}>Cerrar</Button>
+                            <Button onClick={() => {
+                                setIsDetailsOpen(false);
+                                localStorage.setItem('app_inventory_details_open', 'false');
+                                localStorage.removeItem('app_inventory_view_id');
+                            }}>Cerrar</Button>
                         </div>
                     </div>
                 )}

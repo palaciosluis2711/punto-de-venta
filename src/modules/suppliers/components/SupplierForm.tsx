@@ -11,25 +11,86 @@ interface SupplierFormProps {
 }
 
 export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmit, onCancel }) => {
-    const [formData, setFormData] = useState<Omit<Supplier, 'id'>>({
-        name: '',
-        image: '',
-        address: '',
-        email: '',
-        phone: ''
-    });
-
-    useEffect(() => {
+    const [formData, setFormData] = useState<Omit<Supplier, 'id'>>(() => {
+        // Try to restore from localStorage
         if (initialData) {
-            setFormData({
+            // Check for edit draft
+            const draft = localStorage.getItem('app_supplier_edit_draft');
+            if (draft) {
+                try {
+                    const parsed = JSON.parse(draft);
+                    if (parsed._editId === initialData.id) {
+                        const { _editId, ...rest } = parsed;
+                        return rest;
+                    }
+                } catch { }
+            }
+            return {
                 name: initialData.name,
                 image: initialData.image || '',
                 address: initialData.address || '',
                 email: initialData.email || '',
                 phone: initialData.phone || ''
-            });
+            };
+        } else {
+            // Check for new supplier draft
+            const draft = localStorage.getItem('app_supplier_form_state');
+            if (draft) {
+                try {
+                    return JSON.parse(draft);
+                } catch { }
+            }
+            return {
+                name: '',
+                image: '',
+                address: '',
+                email: '',
+                phone: ''
+            };
+        }
+    });
+
+    // Handle initialData changes
+    useEffect(() => {
+        if (initialData) {
+            const draft = localStorage.getItem('app_supplier_edit_draft');
+            let shouldUseDraft = false;
+            let draftData = null;
+
+            if (draft) {
+                try {
+                    const parsed = JSON.parse(draft);
+                    if (parsed._editId === initialData.id) {
+                        shouldUseDraft = true;
+                        draftData = parsed;
+                    }
+                } catch { }
+            }
+
+            if (shouldUseDraft && draftData) {
+                const { _editId, ...rest } = draftData;
+                setFormData(rest);
+            } else {
+                setFormData({
+                    name: initialData.name,
+                    image: initialData.image || '',
+                    address: initialData.address || '',
+                    email: initialData.email || '',
+                    phone: initialData.phone || ''
+                });
+            }
         }
     }, [initialData]);
+
+    // Persist changes
+    useEffect(() => {
+        if (initialData) {
+            const state = { ...formData, _editId: initialData.id };
+            localStorage.setItem('app_supplier_edit_draft', JSON.stringify(state));
+        } else {
+            localStorage.setItem('app_supplier_form_state', JSON.stringify(formData));
+        }
+    }, [formData, initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

@@ -11,8 +11,15 @@ import type { Supplier } from './types';
 
 export const SuppliersPage: React.FC = () => {
     const { suppliers, addSupplier, updateSupplier, deleteSupplier, deleteSuppliers, searchSuppliers } = useSuppliers();
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+    // Initialize Modal State from LocalStorage
+    const [isFormModalOpen, setIsFormModalOpen] = useState(() => {
+        return localStorage.getItem('app_suppliers_modal_open') === 'true';
+    });
+
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(() => {
+        return localStorage.getItem('app_suppliers_details_open') === 'true';
+    });
 
     // Dialog state
     const [dialogState, setDialogState] = useState<{ isOpen: boolean; type: 'delete' | 'bulk-delete'; id?: string }>({
@@ -22,6 +29,34 @@ export const SuppliersPage: React.FC = () => {
 
     const [editingSupplier, setEditingSupplier] = useState<Supplier | undefined>(undefined);
     const [viewingSupplier, setViewingSupplier] = useState<Supplier | undefined>(undefined);
+
+    // Restore editing state logic
+    React.useEffect(() => {
+        const editId = localStorage.getItem('app_suppliers_edit_id');
+        if (editId && suppliers.length > 0 && !editingSupplier) {
+            const supplierToEdit = suppliers.find(s => s.id === editId);
+            if (supplierToEdit) {
+                setEditingSupplier(supplierToEdit);
+                // Ensure modal is open if we found the supplier (redundant check but safe)
+                if (localStorage.getItem('app_suppliers_modal_open') === 'true') {
+                    setIsFormModalOpen(true);
+                }
+            }
+        }
+
+        // Restore viewing state logic
+        const viewId = localStorage.getItem('app_suppliers_view_id');
+        if (viewId && suppliers.length > 0 && !viewingSupplier) {
+            const supplierToView = suppliers.find(s => s.id === viewId);
+            if (supplierToView) {
+                setViewingSupplier(supplierToView);
+                if (localStorage.getItem('app_suppliers_details_open') === 'true') {
+                    setIsDetailsModalOpen(true);
+                }
+            }
+        }
+    }, [suppliers, editingSupplier, viewingSupplier]);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -30,19 +65,28 @@ export const SuppliersPage: React.FC = () => {
     const handleAddClick = () => {
         setEditingSupplier(undefined);
         setIsFormModalOpen(true);
+        localStorage.setItem('app_suppliers_modal_open', 'true');
+        localStorage.removeItem('app_suppliers_edit_id');
+        localStorage.removeItem('app_supplier_form_state'); // Clear any stale edit drafts
     };
 
     const handleEditClick = (supplier: Supplier) => {
         setEditingSupplier(supplier);
         setIsFormModalOpen(true);
+        localStorage.setItem('app_suppliers_modal_open', 'true');
+        localStorage.setItem('app_suppliers_edit_id', supplier.id);
+        localStorage.removeItem('app_supplier_form_state'); // Clear any stale new drafts
     };
+
+    // ... existing view/select/delete handlers ...
 
     const handleViewClick = (supplier: Supplier) => {
         setViewingSupplier(supplier);
         setIsDetailsModalOpen(true);
+        localStorage.setItem('app_suppliers_details_open', 'true');
+        localStorage.setItem('app_suppliers_view_id', supplier.id);
     };
 
-    // Selection handlers
     const handleSelect = (id: string) => {
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -57,7 +101,6 @@ export const SuppliersPage: React.FC = () => {
         }
     };
 
-    // Delete handlers
     const handleDeleteClick = (id: string) => {
         setDialogState({ isOpen: true, type: 'delete', id });
     };
@@ -70,7 +113,6 @@ export const SuppliersPage: React.FC = () => {
     const confirmDelete = () => {
         if (dialogState.type === 'delete' && dialogState.id) {
             deleteSupplier(dialogState.id);
-            // Remove from selection if it was selected
             setSelectedIds(prev => prev.filter(id => id !== dialogState.id));
         } else if (dialogState.type === 'bulk-delete') {
             deleteSuppliers(selectedIds);
@@ -86,10 +128,24 @@ export const SuppliersPage: React.FC = () => {
             addSupplier(data);
         }
         setIsFormModalOpen(false);
+        // Clear persistence
+        localStorage.setItem('app_suppliers_modal_open', 'false');
+        localStorage.removeItem('app_suppliers_edit_id');
+        localStorage.removeItem('app_supplier_form_state');
+        localStorage.removeItem('app_supplier_edit_draft');
+    };
+
+    const handleCloseModal = () => {
+        setIsFormModalOpen(false);
+        localStorage.setItem('app_suppliers_modal_open', 'false');
+        localStorage.removeItem('app_suppliers_edit_id');
+        localStorage.removeItem('app_supplier_form_state');
+        localStorage.removeItem('app_supplier_edit_draft');
     };
 
     return (
         <div className="animate-in flex flex-col gap-6" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto' }}>
+            {/* ... Header ... */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Proveedores</h1>
@@ -148,20 +204,24 @@ export const SuppliersPage: React.FC = () => {
             {/* Form Modal */}
             <Modal
                 isOpen={isFormModalOpen}
-                onClose={() => setIsFormModalOpen(false)}
+                onClose={handleCloseModal}
                 title={editingSupplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
             >
                 <SupplierForm
                     initialData={editingSupplier}
                     onSubmit={handleFormSubmit}
-                    onCancel={() => setIsFormModalOpen(false)}
+                    onCancel={handleCloseModal}
                 />
             </Modal>
 
             {/* Details Modal */}
             <Modal
                 isOpen={isDetailsModalOpen}
-                onClose={() => setIsDetailsModalOpen(false)}
+                onClose={() => {
+                    setIsDetailsModalOpen(false);
+                    localStorage.setItem('app_suppliers_details_open', 'false');
+                    localStorage.removeItem('app_suppliers_view_id');
+                }}
                 title="Detalles del Proveedor"
             >
                 {viewingSupplier && (
@@ -196,7 +256,11 @@ export const SuppliersPage: React.FC = () => {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'end' }}>
-                            <Button onClick={() => setIsDetailsModalOpen(false)}>Cerrar</Button>
+                            <Button onClick={() => {
+                                setIsDetailsModalOpen(false);
+                                localStorage.setItem('app_suppliers_details_open', 'false');
+                                localStorage.removeItem('app_suppliers_view_id');
+                            }}>Cerrar</Button>
                         </div>
                     </div>
                 )}

@@ -17,6 +17,19 @@ export const PurchasesPage: React.FC = () => {
     const [viewingPurchase, setViewingPurchase] = useState<Purchase | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
 
+    // Persistence Effect
+    React.useEffect(() => {
+        const isOpen = localStorage.getItem('app_purchases_details_open') === 'true';
+        const viewId = localStorage.getItem('app_purchases_view_id');
+
+        if (isOpen && viewId && purchases.length > 0 && !viewingPurchase) {
+            const found = purchases.find(p => p.id === viewId);
+            if (found) {
+                setViewingPurchase(found);
+            }
+        }
+    }, [purchases, viewingPurchase]);
+
     // Ref for printing content
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +100,11 @@ export const PurchasesPage: React.FC = () => {
                                 purchases.map((purchase) => (
                                     <tr
                                         key={purchase.id}
-                                        onClick={() => setViewingPurchase(purchase)}
+                                        onClick={() => {
+                                            setViewingPurchase(purchase);
+                                            localStorage.setItem('app_purchases_details_open', 'true');
+                                            localStorage.setItem('app_purchases_view_id', purchase.id);
+                                        }}
                                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                                     >
                                         <td>{new Date(purchase.date).toLocaleDateString()}</td>
@@ -112,7 +129,11 @@ export const PurchasesPage: React.FC = () => {
                                                     size="sm"
                                                     icon={<Eye size={16} />}
                                                     title="Ver Detalles"
-                                                    onClick={() => setViewingPurchase(purchase)}
+                                                    onClick={() => {
+                                                        setViewingPurchase(purchase);
+                                                        localStorage.setItem('app_purchases_details_open', 'true');
+                                                        localStorage.setItem('app_purchases_view_id', purchase.id);
+                                                    }}
                                                 />
                                                 {purchase.status === 'completed' && (
                                                     <Button
@@ -136,7 +157,11 @@ export const PurchasesPage: React.FC = () => {
             {/* Details Modal */}
             <Modal
                 isOpen={!!viewingPurchase}
-                onClose={() => setViewingPurchase(null)}
+                onClose={() => {
+                    setViewingPurchase(null);
+                    localStorage.setItem('app_purchases_details_open', 'false');
+                    localStorage.removeItem('app_purchases_view_id');
+                }}
                 title="Detalle de Compra"
             >
                 {viewingPurchase && (
@@ -229,7 +254,11 @@ export const PurchasesPage: React.FC = () => {
                             <Button variant="outline" onClick={handlePrint} icon={<Printer size={16} />}>
                                 Imprimir
                             </Button>
-                            <Button onClick={() => setViewingPurchase(null)}>
+                            <Button onClick={() => {
+                                setViewingPurchase(null);
+                                localStorage.setItem('app_purchases_details_open', 'false');
+                                localStorage.removeItem('app_purchases_view_id');
+                            }}>
                                 Cerrar
                             </Button>
                         </div>

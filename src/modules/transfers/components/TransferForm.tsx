@@ -6,6 +6,7 @@ import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
 import { Search, Trash2, Save, ArrowRight } from 'lucide-react';
 import type { Product } from '../../inventory/types';
+import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
 
 interface TransferFormProps {
     onSubmit: (data: any) => Promise<void>;
@@ -18,12 +19,43 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
     const { stores, activeStoreId } = useStores();
     const { products } = useInventory();
 
-    const [sourceStoreId, setSourceStoreId] = useState('');
-    const [destinationStoreId, setDestinationStoreId] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [items, setItems] = useState<TransferItem[]>([]);
+    const [sourceStoreId, setSourceStoreId] = useState(() => {
+        if (initialData) return initialData.sourceStoreId;
+        const saved = localStorage.getItem('app_transfer_form_state');
+        if (saved) {
+            try { return JSON.parse(saved).sourceStoreId || (activeStoreId || ''); } catch { }
+        }
+        return activeStoreId || '';
+    });
 
-    // Initialize form with data if provided
+    const [destinationStoreId, setDestinationStoreId] = useState(() => {
+        if (initialData) return initialData.destinationStoreId;
+        const saved = localStorage.getItem('app_transfer_form_state');
+        if (saved) {
+            try { return JSON.parse(saved).destinationStoreId || ''; } catch { }
+        }
+        return '';
+    });
+
+    const [date, setDate] = useState(() => {
+        if (initialData) return new Date(initialData.date).toISOString().split('T')[0];
+        const saved = localStorage.getItem('app_transfer_form_state');
+        if (saved) {
+            try { return JSON.parse(saved).date || new Date().toISOString().split('T')[0]; } catch { }
+        }
+        return new Date().toISOString().split('T')[0];
+    });
+
+    const [items, setItems] = useState<TransferItem[]>(() => {
+        if (initialData) return initialData.items;
+        const saved = localStorage.getItem('app_transfer_form_state');
+        if (saved) {
+            try { return JSON.parse(saved).items || []; } catch { }
+        }
+        return [];
+    });
+
+    // Handle initialData changes if they happen after mount
     useEffect(() => {
         if (initialData) {
             setSourceStoreId(initialData.sourceStoreId);
@@ -31,37 +63,16 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
             const formattedDate = new Date(initialData.date).toISOString().split('T')[0];
             setDate(formattedDate);
             setItems(initialData.items);
-        } else {
-            // Restore from localStorage first
-            const savedState = localStorage.getItem('app_transfer_form_state');
-            let restored = false;
-            if (savedState) {
-                try {
-                    const parsed = JSON.parse(savedState);
-                    setSourceStoreId(parsed.sourceStoreId || '');
-                    setDestinationStoreId(parsed.destinationStoreId || '');
-                    if (parsed.items) setItems(parsed.items);
-                    restored = true;
-                } catch (e) {
-                    console.error("Failed to restore transfer draft", e);
-                }
-            }
-
-            // Default Source Store to Active Store if creating new AND nothing restored (or override if preferred? Let's check)
-            // If restored definition exists, we assume user wants that. If not, default.
-            if (!restored && activeStoreId) {
-                setSourceStoreId(activeStoreId);
-            }
         }
-    }, [initialData, activeStoreId]);
+    }, [initialData]);
 
     // Persist state
     useEffect(() => {
         if (!initialData) {
-            const stateToSave = { sourceStoreId, destinationStoreId, items };
+            const stateToSave = { sourceStoreId, destinationStoreId, date, items };
             localStorage.setItem('app_transfer_form_state', JSON.stringify(stateToSave));
         }
-    }, [sourceStoreId, destinationStoreId, items, initialData]);
+    }, [sourceStoreId, destinationStoreId, date, items, initialData]);
 
     // Item adding state
     const [searchTerm, setSearchTerm] = useState('');
@@ -99,12 +110,31 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
         });
     }, []);
 
-    // Auto-add effect for perfect match
+    // Auto-add effect with Debounce
     useEffect(() => {
-        if (searchResults.length === 1 && searchTerm) {
-            handleSelectProduct(searchResults[0]);
-        }
+        if (!searchTerm) return;
+
+        const timer = setTimeout(() => {
+            if (searchResults.length === 1) {
+                handleSelectProduct(searchResults[0]);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, [searchResults, searchTerm, handleSelectProduct]);
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchTerm) {
+            e.preventDefault();
+            // Prioritize Exact Barcode Match on Enter
+            const exactBarcodeMatch = searchResults.find(p => p.barcode.toLowerCase() === searchTerm.toLowerCase());
+            if (exactBarcodeMatch) {
+                handleSelectProduct(exactBarcodeMatch);
+            } else if (searchResults.length === 1) {
+                handleSelectProduct(searchResults[0]);
+            }
+        }
+    };
 
     const handleUpdateItem = (index: number, quantity: number) => {
         if (quantity < 1) return;
@@ -160,203 +190,235 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
         });
     };
 
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+    const handleCancel = () => {
+        if (items.length > 0 && !initialData) {
+            setShowCancelConfirm(true);
+        } else {
+            proceedCancel();
+        }
+    };
+
+    const proceedCancel = () => {
+        // Clear draft on explicit cancel
+        if (!initialData) {
+            localStorage.removeItem('app_transfer_form_state');
+        }
+        onCancel();
+    };
+
     return (
-        <form onSubmit={handleSubmit} className="purchase-form">
-            {/* Same layout classes as PurchaseForm since we want it to look "exactly alike" */}
-            <div className="purchase-form-main">
-                <div className="purchase-form-section">
-                    <h3 className="font-semibold text-sm text-muted uppercase tracking-wider">Agregar Productos a Transferir</h3>
-                    <div className="item-search-wrapper">
-                        <Input
-                            label="Buscar Producto (Nombre o Código)"
-                            placeholder="Escribe para buscar..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            icon={<Search size={18} />}
-                            autoFocus
-                            disabled={!sourceStoreId} // Disable search if no source store selected (needed for stock check)
-                        />
-                        {!sourceStoreId && <div className="text-xs text-muted mt-1">Selecciona una tienda de origen primero.</div>}
+        <>
+            <form onSubmit={handleSubmit} className="purchase-form">
+                {/* Same layout classes as PurchaseForm since we want it to look "exactly alike" */}
+                <div className="purchase-form-main">
+                    <div className="purchase-form-section">
+                        <h3 className="font-semibold text-sm text-muted uppercase tracking-wider">Agregar Productos a Transferir</h3>
+                        <div className="item-search-wrapper">
+                            <Input
+                                label="Buscar Producto (Nombre o Código)"
+                                placeholder="Escribe para buscar..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                onKeyDown={handleInputKeyDown}
+                                icon={<Search size={18} />}
+                                autoFocus
+                                disabled={!sourceStoreId} // Disable search if no source store selected (needed for stock check)
+                            />
+                            {!sourceStoreId && <div className="text-xs text-muted mt-1">Selecciona una tienda de origen primero.</div>}
 
-                        {searchResults.length > 0 && (
-                            <div className="search-results-dropdown">
-                                {searchResults.map(product => {
-                                    const sourceStock = sourceStoreId ? (product.inventory?.[sourceStoreId] || 0) : 0;
-                                    return (
-                                        <div
-                                            key={product.id}
-                                            className="search-result-item"
-                                            onClick={() => handleSelectProduct(product)}
-                                        >
-                                            <div className="font-medium">{product.name}</div>
-                                            <div className="text-sm text-muted flex justify-between">
-                                                <span>{product.barcode}</span>
-                                                {sourceStoreId && (
-                                                    <span className={sourceStock <= 0 ? "text-danger" : "text-success"}>
-                                                        Disp: {sourceStock}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="purchase-form-items">
-                    <div className="purchases-table-wrapper">
-                        <table className="purchases-table">
-                            <thead className="bg-surface-hover sticky top-0">
-                                <tr>
-                                    <th style={{ padding: '0.75rem' }}>Producto</th>
-                                    <th className="table-cell-center" style={{ padding: '0.75rem', width: '120px' }}>Cantidad</th>
-                                    <th className="table-cell-center" style={{ padding: '0.75rem', width: '100px' }}>Disponible</th>
-                                    <th className="table-cell-right" style={{ padding: '0.75rem' }}>Valor Unit.</th>
-                                    <th className="table-cell-right" style={{ padding: '0.75rem' }}>Subtotal</th>
-                                    <th style={{ padding: '0.75rem', width: '40px' }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {items.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                                            Busca y selecciona productos para transferir.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    items.map((item, index) => {
-                                        const availableStock = getProductStockInSource(item.productId);
-                                        const isLowStock = item.quantity > availableStock;
-
+                            {searchResults.length > 0 && (
+                                <div className="search-results-dropdown">
+                                    {searchResults.map(product => {
+                                        const sourceStock = sourceStoreId ? (product.inventory?.[sourceStoreId] || 0) : 0;
                                         return (
-                                            <tr key={index}>
-                                                <td style={{ padding: '0.75rem' }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                                        <span>{item.productName}</span>
-                                                        {isLowStock && (
-                                                            <span className="text-danger font-medium" style={{ fontSize: '0.75rem' }}>
-                                                                ⚠ Insuficiente en origen
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="table-cell-center" style={{ padding: '0.5rem' }}>
-                                                    <input
-                                                        type="number"
-                                                        value={item.quantity}
-                                                        onChange={(e) => handleUpdateItem(index, Number(e.target.value))}
-                                                        min="1"
-                                                        className={`input-field text-center ${isLowStock ? 'border-danger text-danger' : ''}`}
-                                                        style={{ padding: '0.25rem' }}
-                                                    />
-                                                </td>
-                                                <td className="table-cell-center" style={{ padding: '0.5rem' }}>
-                                                    <span className={isLowStock ? 'text-danger font-medium' : 'text-muted'}>
-                                                        {availableStock}
-                                                    </span>
-                                                </td>
-                                                <td className="table-cell-right" style={{ padding: '0.5rem' }}>
-                                                    ${item.unitCost.toFixed(2)}
-                                                </td>
-                                                <td className="table-cell-right" style={{ padding: '0.75rem', fontWeight: 500 }}>
-                                                    ${item.subtotal.toFixed(2)}
-                                                </td>
-                                                <td className="table-cell-center" style={{ padding: '0.75rem' }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveItem(index)}
-                                                        className="icon-button-danger"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                            <div
+                                                key={product.id}
+                                                className="search-result-item"
+                                                onClick={() => handleSelectProduct(product)}
+                                            >
+                                                <div className="font-medium">{product.name}</div>
+                                                <div className="text-sm text-muted flex justify-between">
+                                                    <span>{product.barcode}</span>
+                                                    {sourceStoreId && (
+                                                        <span className={sourceStock <= 0 ? "text-danger" : "text-success"}>
+                                                            Disp: {sourceStock}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="purchase-form-items">
+                        <div className="purchases-table-wrapper">
+                            <table className="purchases-table">
+                                <thead className="bg-surface-hover sticky top-0">
+                                    <tr>
+                                        <th style={{ padding: '0.75rem' }}>Producto</th>
+                                        <th className="table-cell-center" style={{ padding: '0.75rem', width: '120px' }}>Cantidad</th>
+                                        <th className="table-cell-center" style={{ padding: '0.75rem', width: '100px' }}>Disponible</th>
+                                        <th className="table-cell-right" style={{ padding: '0.75rem' }}>Valor Unit.</th>
+                                        <th className="table-cell-right" style={{ padding: '0.75rem' }}>Subtotal</th>
+                                        <th style={{ padding: '0.75rem', width: '40px' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {items.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                                Busca y selecciona productos para transferir.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        items.map((item, index) => {
+                                            const availableStock = getProductStockInSource(item.productId);
+                                            const isLowStock = item.quantity > availableStock;
+
+                                            return (
+                                                <tr key={index}>
+                                                    <td style={{ padding: '0.75rem' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                                            <span>{item.productName}</span>
+                                                            {isLowStock && (
+                                                                <span className="text-danger font-medium" style={{ fontSize: '0.75rem' }}>
+                                                                    ⚠ Insuficiente en origen
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="table-cell-center" style={{ padding: '0.5rem' }}>
+                                                        <input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => handleUpdateItem(index, Number(e.target.value))}
+                                                            min="1"
+                                                            className={`input-field text-center ${isLowStock ? 'border-danger text-danger' : ''}`}
+                                                            style={{ padding: '0.25rem' }}
+                                                        />
+                                                    </td>
+                                                    <td className="table-cell-center" style={{ padding: '0.5rem' }}>
+                                                        <span className={isLowStock ? 'text-danger font-medium' : 'text-muted'}>
+                                                            {availableStock}
+                                                        </span>
+                                                    </td>
+                                                    <td className="table-cell-right" style={{ padding: '0.5rem' }}>
+                                                        ${item.unitCost.toFixed(2)}
+                                                    </td>
+                                                    <td className="table-cell-right" style={{ padding: '0.75rem', fontWeight: 500 }}>
+                                                        ${item.subtotal.toFixed(2)}
+                                                    </td>
+                                                    <td className="table-cell-center" style={{ padding: '0.75rem' }}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveItem(index)}
+                                                            className="icon-button-danger"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="purchase-form-sidebar">
-                <div className="purchase-details-card">
-                    <h3 className="font-semibold text-sm text-muted uppercase tracking-wider mb-2">Detalles de Transferencia</h3>
+                <div className="purchase-form-sidebar">
+                    <div className="purchase-details-card">
+                        <h3 className="font-semibold text-sm text-muted uppercase tracking-wider mb-2">Detalles de Transferencia</h3>
 
-                    <div className="sidebar-input-group">
-                        <label className="sidebar-label">Fecha</label>
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
-                            className="input-field"
-                            required
-                        />
+                        <div className="sidebar-input-group">
+                            <label className="sidebar-label">Fecha</label>
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={e => setDate(e.target.value)}
+                                className="input-field"
+                                required
+                            />
+                        </div>
+
+                        <div className="sidebar-input-group">
+                            <label className="sidebar-label">Tienda Origen</label>
+                            <select
+                                value={sourceStoreId}
+                                onChange={e => setSourceStoreId(e.target.value)}
+                                className="input-field"
+                                required
+                            >
+                                <option value="">Seleccionar Origen...</option>
+                                {stores.map(s => (
+                                    <option key={s.id} value={s.id} disabled={s.id === destinationStoreId}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex justify-center my-2 text-muted">
+                            <ArrowRight size={20} />
+                        </div>
+
+                        <div className="sidebar-input-group">
+                            <label className="sidebar-label">Tienda Destino</label>
+                            <select
+                                value={destinationStoreId}
+                                onChange={e => setDestinationStoreId(e.target.value)}
+                                className="input-field"
+                                required
+                            >
+                                <option value="">Seleccionar Destino...</option>
+                                {stores.filter(s => s.id !== sourceStoreId).map(s => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
-                    <div className="sidebar-input-group">
-                        <label className="sidebar-label">Tienda Origen</label>
-                        <select
-                            value={sourceStoreId}
-                            onChange={e => setSourceStoreId(e.target.value)}
-                            className="input-field"
-                            required
-                        >
-                            <option value="">Seleccionar Origen...</option>
-                            {stores.map(s => (
-                                <option key={s.id} value={s.id} disabled={s.id === destinationStoreId}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <div className="purchase-summary-card">
+                        <div className="summary-total">
+                            <span className="summary-total-label">Valor Total</span>
+                            <span className="summary-total-value">${totalValue.toFixed(2)}</span>
+                        </div>
 
-                    <div className="flex justify-center my-2 text-muted">
-                        <ArrowRight size={20} />
-                    </div>
-
-                    <div className="sidebar-input-group">
-                        <label className="sidebar-label">Tienda Destino</label>
-                        <select
-                            value={destinationStoreId}
-                            onChange={e => setDestinationStoreId(e.target.value)}
-                            className="input-field"
-                            required
-                        >
-                            <option value="">Seleccionar Destino...</option>
-                            {stores.filter(s => s.id !== sourceStoreId).map(s => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="summary-actions">
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isProcessing || items.length === 0 || !sourceStoreId || !destinationStoreId}
+                                icon={<Save size={18} />}
+                            >
+                                {isProcessing ? 'Procesando...' : 'Guardar Transferencia'}
+                            </Button>
+                            <Button type="button" variant="ghost" className="w-full" onClick={handleCancel} disabled={isProcessing}>
+                                Cancelar
+                            </Button>
+                        </div>
                     </div>
                 </div>
+            </form>
 
-                <div className="purchase-summary-card">
-                    <div className="summary-total">
-                        <span className="summary-total-label">Valor Total</span>
-                        <span className="summary-total-value">${totalValue.toFixed(2)}</span>
-                    </div>
-
-                    <div className="summary-actions">
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={isProcessing || items.length === 0 || !sourceStoreId || !destinationStoreId}
-                            icon={<Save size={18} />}
-                        >
-                            {isProcessing ? 'Procesando...' : 'Guardar Transferencia'}
-                        </Button>
-                        <Button type="button" variant="ghost" className="w-full" onClick={onCancel} disabled={isProcessing}>
-                            Cancelar
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </form>
+            <ConfirmDialog
+                isOpen={showCancelConfirm}
+                title="¿Cancelar Transferencia?"
+                message="Tienes productos agregados para transferir. Si cancelas ahora, la operación no se guardará y perderás los datos ingresados."
+                confirmText="Sí, Cancelar y Salir"
+                cancelText="Continuar Editando"
+                variant="danger"
+                onConfirm={proceedCancel}
+                onCancel={() => setShowCancelConfirm(false)}
+            />
+        </>
     );
 };

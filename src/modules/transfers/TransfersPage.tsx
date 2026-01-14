@@ -17,6 +17,19 @@ export const TransfersPage: React.FC = () => {
     const [viewingTransfer, setViewingTransfer] = useState<Transfer | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
 
+    // Persistence Effect
+    React.useEffect(() => {
+        const isOpen = localStorage.getItem('app_transfers_details_open') === 'true';
+        const viewId = localStorage.getItem('app_transfers_view_id');
+
+        if (isOpen && viewId && transfers.length > 0 && !viewingTransfer) {
+            const found = transfers.find(t => t.id === viewId);
+            if (found) {
+                setViewingTransfer(found);
+            }
+        }
+    }, [transfers, viewingTransfer]);
+
     // Ref for printing content
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -109,7 +122,11 @@ export const TransfersPage: React.FC = () => {
                                 transfers.map((transfer) => (
                                     <tr
                                         key={transfer.id}
-                                        onClick={() => setViewingTransfer(transfer)}
+                                        onClick={() => {
+                                            setViewingTransfer(transfer);
+                                            localStorage.setItem('app_transfers_details_open', 'true');
+                                            localStorage.setItem('app_transfers_view_id', transfer.id);
+                                        }}
                                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                                     >
                                         <td>{new Date(transfer.date).toLocaleDateString()}</td>
@@ -138,7 +155,11 @@ export const TransfersPage: React.FC = () => {
                                                     size="sm"
                                                     icon={<Eye size={16} />}
                                                     title="Ver Detalles"
-                                                    onClick={() => setViewingTransfer(transfer)}
+                                                    onClick={() => {
+                                                        setViewingTransfer(transfer);
+                                                        localStorage.setItem('app_transfers_details_open', 'true');
+                                                        localStorage.setItem('app_transfers_view_id', transfer.id);
+                                                    }}
                                                 />
                                                 {transfer.status === 'completed' && (
                                                     <Button
@@ -162,7 +183,11 @@ export const TransfersPage: React.FC = () => {
             {/* Details Modal */}
             <Modal
                 isOpen={!!viewingTransfer}
-                onClose={() => setViewingTransfer(null)}
+                onClose={() => {
+                    setViewingTransfer(null);
+                    localStorage.setItem('app_transfers_details_open', 'false');
+                    localStorage.removeItem('app_transfers_view_id');
+                }}
                 title="Detalle de Transferencia"
             >
                 {viewingTransfer && (
@@ -255,7 +280,11 @@ export const TransfersPage: React.FC = () => {
                             <Button variant="outline" onClick={handlePrint} icon={<Printer size={16} />}>
                                 Imprimir
                             </Button>
-                            <Button onClick={() => setViewingTransfer(null)}>
+                            <Button onClick={() => {
+                                setViewingTransfer(null);
+                                localStorage.setItem('app_transfers_details_open', 'false');
+                                localStorage.removeItem('app_transfers_view_id');
+                            }}>
                                 Cerrar
                             </Button>
                         </div>

@@ -129,41 +129,6 @@ export const PosPage: React.FC = () => {
         return results;
     }, [searchQuery, products, searchProducts, activeStoreId]);
 
-    // Auto-add effect
-    useEffect(() => {
-        if (filteredProducts.length === 1 && searchQuery) {
-            addToCart(filteredProducts[0]);
-            setSearchQuery(''); // Clear search after auto-add
-        }
-    }, [filteredProducts, searchQuery, addToCart]);
-
-    const handleCheckout = () => {
-        if (!activeStoreId) {
-            alert("Error: No se ha detectado una tienda activa para descontar inventario.");
-            return;
-        }
-
-        if (confirm(`¿Proceder al cobro de $${total.toFixed(2)}?`)) {
-            // Deduct stock using bulk update
-            const movements = cart.map(item => ({
-                productId: item.id,
-                storeId: activeStoreId,
-                quantity: -item.quantity
-            }));
-
-            updateStockBulk(movements);
-
-            alert('Venta realizada con éxito!');
-            clearCart();
-        }
-    };
-
-    const handleQuickAdd = (data: Omit<Product, 'id'>) => {
-        addProduct(data);
-        setIsAddModalOpen(false);
-        // Optionally auto-add to cart or focus search
-    };
-
     const addToCartWrapper = (product: Product) => {
         if (product.associatedProducts && product.associatedProducts.length > 0) {
             // It's a special product container/bundle
@@ -240,6 +205,69 @@ export const PosPage: React.FC = () => {
         }
     };
 
+    // Auto-add effect with Debounce
+    // We strictly wait for the user to stop typing to avoid "Prefix" issues (e.g. typing '1234' but '123' matches).
+    useEffect(() => {
+        if (!searchQuery) return;
+
+        const timer = setTimeout(() => {
+            // Only auto-add if there is exactly one match
+            if (filteredProducts.length === 1) {
+                addToCartWrapper(filteredProducts[0]);
+                setSearchQuery('');
+            }
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(timer);
+    }, [filteredProducts, searchQuery, addToCart]);
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchQuery) {
+            e.preventDefault();
+
+            // Prioritize Exact Barcode Match on Enter
+            const exactBarcodeMatch = filteredProducts.find(p => p.barcode.toLowerCase() === searchQuery.toLowerCase());
+
+            if (exactBarcodeMatch) {
+                addToCartWrapper(exactBarcodeMatch);
+                setSearchQuery('');
+            } else if (filteredProducts.length === 1) {
+                // Determine if unique match
+                addToCartWrapper(filteredProducts[0]);
+                setSearchQuery('');
+            }
+        }
+    };
+
+    const handleCheckout = () => {
+        if (!activeStoreId) {
+            alert("Error: No se ha detectado una tienda activa para descontar inventario.");
+            return;
+        }
+
+        if (confirm(`¿Proceder al cobro de $${total.toFixed(2)}?`)) {
+            // Deduct stock using bulk update
+            const movements = cart.map(item => ({
+                productId: item.id,
+                storeId: activeStoreId,
+                quantity: -item.quantity
+            }));
+
+            updateStockBulk(movements);
+
+            alert('Venta realizada con éxito!');
+            clearCart();
+        }
+    };
+
+    const handleQuickAdd = (data: Omit<Product, 'id'>) => {
+        addProduct(data);
+        setIsAddModalOpen(false);
+        // Optionally auto-add to cart or focus search
+    };
+
+
+
     return (
         <div className="pos-layout">
             <div className="pos-main">
@@ -250,6 +278,7 @@ export const PosPage: React.FC = () => {
                             icon={<Search size={20} />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleInputKeyDown}
                             autoFocus
                             className="search-input-lg"
                         />
@@ -303,7 +332,7 @@ export const PosPage: React.FC = () => {
                 onClose={() => setIsAddModalOpen(false)}
                 title="Añadir Producto Rápido"
             >
-                <div style={{ maxHeight: '80vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                <div style={{ paddingRight: '0.5rem' }}>
                     <ProductForm
                         onSubmit={handleQuickAdd}
                         onCancel={() => setIsAddModalOpen(false)}

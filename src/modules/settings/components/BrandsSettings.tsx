@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBrands, type Brand } from '../hooks/useBrands';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
@@ -21,6 +21,15 @@ export const BrandsSettings: React.FC = () => {
 
     // Edit State
     const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+
+    // Persistence Effect
+    useEffect(() => {
+        const editId = localStorage.getItem('app_settings_brands_edit_id');
+        if (editId && brands.length > 0 && !editingBrand) {
+            const found = brands.find(b => b.id === editId);
+            if (found) setEditingBrand(found);
+        }
+    }, [brands]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEditing: boolean = false) => {
         const file = e.target.files?.[0];
@@ -172,7 +181,10 @@ export const BrandsSettings: React.FC = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => setEditingBrand(brand)}
+                                                        onClick={() => {
+                                                            setEditingBrand(brand);
+                                                            localStorage.setItem('app_settings_brands_edit_id', brand.id);
+                                                        }}
                                                         title="Editar"
                                                     >
                                                         <Edit size={16} />
@@ -244,7 +256,10 @@ export const BrandsSettings: React.FC = () => {
             {/* Edit Modal */}
             <Modal
                 isOpen={!!editingBrand}
-                onClose={() => setEditingBrand(null)}
+                onClose={() => {
+                    setEditingBrand(null);
+                    localStorage.removeItem('app_settings_brands_edit_id');
+                }}
                 title="Editar Marca"
             >
                 {editingBrand && (
@@ -293,7 +308,10 @@ export const BrandsSettings: React.FC = () => {
                         </div>
 
                         <div className="modal-actions">
-                            <Button type="button" variant="outline" onClick={() => setEditingBrand(null)}>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingBrand(null);
+                                localStorage.removeItem('app_settings_brands_edit_id');
+                            }}>
                                 Cancelar
                             </Button>
                             <Button type="submit" icon={<Save size={18} />}>

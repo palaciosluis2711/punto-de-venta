@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStores, type Store } from '../hooks/useStores';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
@@ -18,6 +18,15 @@ export const StoresSettings: React.FC = () => {
 
     // Edit State
     const [editingStore, setEditingStore] = useState<Store | null>(null);
+
+    // Persistence Effect
+    useEffect(() => {
+        const editId = localStorage.getItem('app_settings_stores_edit_id');
+        if (editId && stores.length > 0 && !editingStore) {
+            const found = stores.find(s => s.id === editId);
+            if (found) setEditingStore(found);
+        }
+    }, [stores]);
 
     // Delete State
     const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -180,7 +189,10 @@ export const StoresSettings: React.FC = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => setEditingStore(store)}
+                                                        onClick={() => {
+                                                            setEditingStore(store);
+                                                            localStorage.setItem('app_settings_stores_edit_id', store.id);
+                                                        }}
                                                         title="Editar"
                                                     >
                                                         <Edit size={16} />
@@ -253,7 +265,10 @@ export const StoresSettings: React.FC = () => {
             {/* Edit Modal */}
             <Modal
                 isOpen={!!editingStore}
-                onClose={() => setEditingStore(null)}
+                onClose={() => {
+                    setEditingStore(null);
+                    localStorage.removeItem('app_settings_stores_edit_id');
+                }}
                 title="Editar Tienda"
             >
                 {editingStore && (
@@ -297,7 +312,10 @@ export const StoresSettings: React.FC = () => {
                         </div>
 
                         <div className="modal-actions">
-                            <Button type="button" variant="outline" onClick={() => setEditingStore(null)}>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingStore(null);
+                                localStorage.removeItem('app_settings_stores_edit_id');
+                            }}>
                                 Cancelar
                             </Button>
                             <Button type="submit" icon={<Save size={18} />}>

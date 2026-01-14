@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useBlocker } from 'react-router-dom';
 import type { Product } from '../types';
 import { Input } from '../../../shared/components/Input';
 import { Button } from '../../../shared/components/Button';
@@ -8,12 +9,14 @@ import { useUnits } from '../../settings/hooks/useUnits';
 import { useTaxes } from '../../settings/hooks/useTaxes';
 import { useInventory } from '../hooks/useInventory'; // For looking up associated product names
 import { Image as ImageIcon, Upload, X, Plus, Trash2, RefreshCw } from 'lucide-react';
+
 import { ProductSelectionModal } from './ProductSelectionModal';
+import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
 
 interface ProductFormProps {
     initialData?: Product;
     onSubmit: (data: Omit<Product, 'id'>) => void;
-    onCancel: () => void;
+    onCancel: (keepDraft?: boolean) => void;
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCancel }) => {
@@ -27,12 +30,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // Special Product Toggle State
-    const [isSpecial, setIsSpecial] = useState(false);
+
 
     // State initialization helper
     const getInitialState = (): Omit<Product, 'id'> => {
         if (initialData) {
+            // Edit Mode: Check for draft and load if matches
+            const savedEditState = localStorage.getItem('app_product_edit_state');
+            if (savedEditState) {
+                try {
+                    const parsed = JSON.parse(savedEditState);
+                    if (parsed._editId === initialData.id) {
+                        const { _editId, isSpecial, ...rest } = parsed;
+                        return rest;
+                    }
+                } catch { }
+            }
+
             const { id, ...rest } = initialData;
             return {
                 ...rest,
@@ -86,9 +100,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
 
     const [formData, setFormData] = useState<Omit<Product, 'id'>>(getInitialState);
 
+    // Dialog States
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
     // Initial Special Toggle State
     const [isSpecial, setIsSpecial] = useState(() => {
-        if (initialData?.associatedProducts && initialData.associatedProducts.length > 0) return true;
+        // Edit mode: Check draft first
+        if (initialData) {
+            const savedEditState = localStorage.getItem('app_product_edit_state');
+            if (savedEditState) {
+                try {
+                    const parsed = JSON.parse(savedEditState);
+                    if (parsed._editId === initialData.id) {
+                        return parsed.isSpecial || false;
+                    }
+                } catch { }
+            }
+            return initialData.associatedProducts && initialData.associatedProducts.length > 0;
+        }
+
+        // New Product: try to restore from legacy draft if exists
         if (!initialData) {
             const savedState = localStorage.getItem('app_product_form_state');
             if (savedState) {
@@ -100,9 +131,38 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
         return false;
     });
 
+    // Remove useEffect for explicit draft restore since we auto-load now
+
+
+    // Check dirty state
+    const isDirty = () => {
+        if (!initialData) return false;
+
+        // Create a clean version of initial data to compare against
+        const cleanState = {
+            ...initialData,
+            associatedProducts: initialData.associatedProducts?.map(ap => ({
+                ...ap,
+                bundlePrice: ap.bundlePrice ?? 0
+            })) || []
+        };
+        const { id, ...restClean } = cleanState;
+
+        // Compare essential fields
+        // We use JSON stringify specifically on the data shapes we care about
+        // This avoids reference equality issues
+        return JSON.stringify(formData) !== JSON.stringify(restClean) ||
+            isSpecial !== (initialData.associatedProducts && initialData.associatedProducts.length > 0);
+    };
+
+    // Lock to prevent race conditions during discard
+    const isDiscarding = useRef(false);
+
     useEffect(() => {
+        // Reset lock when changing products
+        isDiscarding.current = false;
+
         // When initialData changes (e.g. switching between Edit/New), strictly reset/set form data
-        // This is important because the component might not unmount.
         const newState = getInitialState();
         setFormData(newState);
 
@@ -124,12 +184,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
 
     // Persist state
     useEffect(() => {
+        if (isDiscarding.current) return; // Don't save if we are discarding
+
         if (!initialData) {
             const stateToSave = {
                 ...formData,
                 isSpecial
             };
             localStorage.setItem('app_product_form_state', JSON.stringify(stateToSave));
+        } else {
+            // Persist Edit State
+            const stateToSave = {
+                ...formData,
+                isSpecial,
+                _editId: initialData.id
+            };
+            localStorage.setItem('app_product_edit_state', JSON.stringify(stateToSave));
         }
     }, [formData, isSpecial, initialData]);
 
@@ -290,6 +360,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
         // Clear draft
         if (!initialData) {
             localStorage.removeItem('app_product_form_state');
+        } else {
+            localStorage.removeItem('app_product_edit_state');
         }
 
         // Convert strings to numbers for submission
@@ -303,23 +375,106 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
         onSubmit(submissionData);
     };
 
-    const handleCancel = () => {
-        if (!initialData) {
-            localStorage.removeItem('app_product_form_state');
+    // Custom Navigation Blocking (In-App)
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            isDirty() && currentLocation.pathname !== nextLocation.pathname
+    );
+
+    useEffect(() => {
+        if (blocker.state === 'blocked') {
+            setShowUnsavedDialog(true);
         }
-        onCancel();
+    }, [blocker.state]);
+
+    const handleCancel = () => {
+        if (initialData) {
+            // Edit Mode
+            if (isDirty()) {
+                setShowUnsavedDialog(true);
+                return;
+            }
+            onCancel(false);
+        } else {
+            // New Product Mode
+            localStorage.removeItem('app_product_form_state');
+            setFormData({
+                name: '',
+                barcode: '',
+                price: 0,
+                cost: 0,
+                stock: 0,
+                minStock: 0,
+                category: '',
+                brand: '',
+                unit: '',
+                image: '',
+                associatedProducts: [],
+                tax_apply: false
+            });
+            setIsSpecial(false);
+            setErrors({});
+            onCancel();
+        }
     };
+
+    const handleKeepChanges = () => {
+        // User wants to KEEP changes
+
+        // 1. Ensure draft is saved (it is already in persist effect, but let's be sure)
+        if (initialData) {
+            const stateToSave = {
+                ...formData,
+                isSpecial,
+                _editId: initialData.id
+            };
+            localStorage.setItem('app_product_edit_state', JSON.stringify(stateToSave));
+        }
+
+        // 2. Resolve action
+        if (blocker.state === 'blocked') {
+            blocker.proceed();
+        } else {
+            // Normal cancel button click
+            onCancel(true);
+        }
+        setShowUnsavedDialog(false);
+    };
+
+    const handleDiscardChanges = () => {
+        // User wants to DISCARD changes
+        isDiscarding.current = true; // Lock persistence
+
+        // 1. Clear draft
+        localStorage.removeItem('app_product_edit_state');
+
+        // 2. Reset UI State immediately (so it doesn't persist if component stays mounted)
+        // Since we deleted storage, getInitialState will return the clean initialData
+        setFormData(getInitialState());
+        setIsSpecial(initialData?.associatedProducts && initialData.associatedProducts.length > 0 ? true : false);
+        setErrors({});
+
+        // 3. Resolve action
+        if (blocker.state === 'blocked') {
+            blocker.proceed();
+        } else {
+            onCancel(false);
+        }
+        setShowUnsavedDialog(false);
+    };
+
+    // Handle dialog close (cancel action in dialog = stay)
+    const handleStay = () => {
+        if (blocker.state === 'blocked') {
+            blocker.reset();
+        }
+        setShowUnsavedDialog(false);
+    }
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Image Upload Section */}
-            {/* ... */}
-            {/* ... (rest of form) */}
-
-            <div className="flex justify-end gap-2 mt-4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
-                <Button type="button" variant="ghost" onClick={handleCancel}>
-                    Cancelar
-                </Button>
+            <div className="flex justify-between items-start mb-2">
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-muted">Imagen del Producto (Opcional)</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -669,7 +824,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             )}
 
             <div className="flex justify-end gap-2 mt-4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
-                <Button type="button" variant="ghost" onClick={onCancel}>
+                <Button type="button" variant="ghost" onClick={handleCancel}>
                     Cancelar
                 </Button>
                 <Button type="submit">
@@ -681,6 +836,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSelect={handleAddAssociated}
+            />
+
+            {/* Keep Changes Dialog (triggered on Cancel button) */}
+            <ConfirmDialog
+                isOpen={showUnsavedDialog}
+                title="¿Conservar cambios?"
+                message="Has realizado modificaciones. ¿Deseas conservar los cambios en un borrador para continuar más tarde?"
+                confirmText="Conservar"
+                cancelText="No conservar"
+                variant="primary"
+                onConfirm={handleKeepChanges}
+                onCancel={handleDiscardChanges}
+                onClose={handleStay}
             />
         </form>
     );

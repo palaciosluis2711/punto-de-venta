@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUnits, type Unit } from '../hooks/useUnits';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
@@ -21,6 +21,15 @@ export const UnitsSettings: React.FC = () => {
 
     // Edit State
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+
+    // Persistence Effect
+    useEffect(() => {
+        const editId = localStorage.getItem('app_settings_units_edit_id');
+        if (editId && units.length > 0 && !editingUnit) {
+            const found = units.find(u => u.id === editId);
+            if (found) setEditingUnit(found);
+        }
+    }, [units]);
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -152,7 +161,10 @@ export const UnitsSettings: React.FC = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => setEditingUnit(unit)}
+                                                        onClick={() => {
+                                                            setEditingUnit(unit);
+                                                            localStorage.setItem('app_settings_units_edit_id', unit.id);
+                                                        }}
                                                         title="Editar"
                                                     >
                                                         <Edit size={16} />
@@ -219,7 +231,10 @@ export const UnitsSettings: React.FC = () => {
             {/* Edit Modal */}
             <Modal
                 isOpen={!!editingUnit}
-                onClose={() => setEditingUnit(null)}
+                onClose={() => {
+                    setEditingUnit(null);
+                    localStorage.removeItem('app_settings_units_edit_id');
+                }}
                 title="Editar Unidad"
             >
                 {editingUnit && (
@@ -248,7 +263,10 @@ export const UnitsSettings: React.FC = () => {
                             </label>
                         </div>
                         <div className="modal-actions">
-                            <Button type="button" variant="outline" onClick={() => setEditingUnit(null)}>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingUnit(null);
+                                localStorage.removeItem('app_settings_units_edit_id');
+                            }}>
                                 Cancelar
                             </Button>
                             <Button type="submit" icon={<Save size={18} />}>

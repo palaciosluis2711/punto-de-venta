@@ -23,9 +23,9 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
         if (!searchTerm) return [];
         const lower = searchTerm.toLowerCase();
         return products.filter(p =>
-            p.name.toLowerCase().includes(lower) ||
-            p.barcode.includes(lower)
-        ).slice(0, 5); // Limit to 5 results
+            (p.name.toLowerCase().includes(lower) || p.barcode.includes(lower)) &&
+            (!p.associatedProducts || p.associatedProducts.length === 0) // Filter out bundles
+        ).slice(0, 50); // Increased limit to allow scrolling
     }, [searchTerm, products]);
 
     const handleSelect = (product: Product) => {
@@ -80,7 +80,20 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                                 autoFocus
                             />
                             {searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 bg-white border border-border mt-1 rounded-md shadow-lg z-10" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', marginTop: '0.25rem', borderRadius: 'var(--radius)', zIndex: 50 }}>
+                                <div className="absolute top-full left-0 right-0 bg-white border border-border mt-1 rounded-md shadow-lg z-10"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        right: 0,
+                                        background: 'var(--surface)',
+                                        border: '1px solid var(--border)',
+                                        marginTop: '0.25rem',
+                                        borderRadius: 'var(--radius)',
+                                        zIndex: 50,
+                                        maxHeight: '200px', // Limit height
+                                        overflowY: 'auto'   // Enable scrolling
+                                    }}>
                                     {searchResults.map(p => (
                                         <div
                                             key={p.id}
@@ -96,7 +109,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                             )}
                         </div>
                         {searchTerm && searchResults.length === 0 && (
-                            <p className="text-sm text-muted mt-2 text-center">No se encontraron productos.</p>
+                            <p className="text-sm text-muted mt-2 text-center">No se encontraron productos disponibles.</p>
                         )}
                     </div>
                 ) : (

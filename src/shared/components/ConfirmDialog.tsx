@@ -12,6 +12,7 @@ interface ConfirmDialogProps {
     variant?: 'danger' | 'primary' | 'warning';
     onConfirm: () => void;
     onCancel: () => void;
+    onClose?: () => void; // Optional: Action for clicking outside/closing without choice
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -22,10 +23,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     cancelText = 'Cancelar',
     variant = 'danger',
     onConfirm,
-    onCancel
+    onCancel,
+    onClose
 }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onCancel} title={title}>
+        <Modal isOpen={isOpen} onClose={onClose || onCancel} title={title}>
             <div className="flex flex-col gap-4" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                     <div style={{
