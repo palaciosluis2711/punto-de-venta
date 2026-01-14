@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { MainLayout } from './core/layout/MainLayout';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
 import { InventoryPage } from './modules/inventory/InventoryPage';
@@ -42,7 +42,7 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;
