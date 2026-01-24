@@ -69,7 +69,7 @@ export const PosCart: React.FC<PosCartProps> = ({
         };
     }, [activeOptionMenuId, activePriceEditId]);
 
-    const handlePriceClick = (item: CartItem, event?: React.MouseEvent) => {
+    const handlePriceClick = (item: CartItem) => {
         if (item.specialPrice !== undefined) {
             // For special price, we can keep the local popover or move it too. 
             // Keeping it local for now as user complained about Options menu specifically.
@@ -80,7 +80,7 @@ export const PosCart: React.FC<PosCartProps> = ({
 
     const handleNameClick = (item: CartItem, event: React.MouseEvent) => {
         if (item.specialPrice !== undefined) {
-            handlePriceClick(item, event);
+            handlePriceClick(item);
             return;
         }
 
@@ -157,7 +157,7 @@ export const PosCart: React.FC<PosCartProps> = ({
                             </div>
                             <div
                                 className={`cart-item-price ${item.discount ? 'text-pink-500 font-bold' : (item.isSpecialPrice ? 'text-success font-bold' : (item.manualPrice ? 'text-blue-600 font-bold' : ''))} cursor-pointer`}
-                                onClick={(e) => handlePriceClick(item, e)}
+                                onClick={() => handlePriceClick(item)}
                                 title={item.isSpecialPrice ? "Precio de Paquete" : (item.manualPrice ? "Precio Manual" : "Precio Normal")}
                                 style={{
                                     color: item.discount ? 'var(--pink-500, #ec4899)' : (item.isSpecialPrice ? 'var(--success)' : (item.manualPrice ? 'var(--primary)' : 'inherit')),
