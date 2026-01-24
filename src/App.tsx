@@ -11,6 +11,7 @@ import { PurchaseEditPage } from './modules/purchases/PurchaseEditPage';
 import { TransfersPage } from './modules/transfers/TransfersPage';
 import { TransferCreatePage } from './modules/transfers/TransferCreatePage';
 import { TransferEditPage } from './modules/transfers/TransferEditPage';
+import { ClientsPage } from './modules/clients/ClientsPage';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: "inventory", element: <InventoryPage /> },
       { path: "suppliers", element: <SuppliersPage /> },
+      { path: "clients", element: <ClientsPage /> },
       { path: "pos", element: <PosPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "purchases", element: <PurchasesPage /> },

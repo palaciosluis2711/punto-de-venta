@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { useInventory } from '../inventory/hooks/useInventory';
 import { useCart } from './hooks/useCart';
+import { useClients } from '../clients/hooks/useClients';
 import { PosProductList } from './components/PosProductList';
 import { PosCart } from './components/PosCart';
+import { PosClientSelector } from './components/PosClientSelector';
+import { ClientForm } from '../clients/components/ClientForm';
 import { Input } from '../../shared/components/Input';
 import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
 import { ProductForm } from '../inventory/components/ProductForm';
 import type { Product } from '../inventory/types';
+import type { Client } from '../clients/types';
 import './PosPage.css';
 
 import { useOutletContext } from 'react-router-dom';
@@ -27,9 +31,15 @@ export const PosPage: React.FC = () => {
         toggleItemPrice,
         total
     } = useCart();
+    const { searchClients, addClient, updateClient } = useClients();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    // Client State
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
 
     // Sidebar Resize Logic
     const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -52,10 +62,6 @@ export const PosPage: React.FC = () => {
 
     const resize = React.useCallback((mouseMoveEvent: MouseEvent) => {
         if (isResizing) {
-            // Sidebar is on the right, so width is (Window Width - Mouse X)
-            // But we are in a flex container, simpler is to use movement from right edge.
-            // Or just: New Width = Window Width - Mouse X.
-            // Assuming the sidebar is right-aligned in full screen logic.
             const newWidth = document.body.clientWidth - mouseMoveEvent.clientX;
             if (newWidth > 250 && newWidth < 800) {
                 setSidebarWidth(newWidth);
@@ -79,33 +85,13 @@ export const PosPage: React.FC = () => {
 
     // Derived state for filtered products
     const filteredProducts = React.useMemo(() => {
-        // First filter by Active Store (if valid activeStoreId matches inventory)
-        // If inventory is missing or empty, we assume it's NOT in the store (or we need a way to assign it). 
-        // For this MVP, let's assume global visibility if no specific inventory is set, 
-        // OR strictly filter if inventory exists.
-        // User request: "only products of that store".
-        // Let's iterate: Show product IF:
-        // 1. It matches search query (if any)
-        // AND
-        // 2. It has stock > 0 in activeStoreId (real inventory check)
-        // OR
-        // 3. It serves as a fallback for the "Main Store" if we treat Main as default?
-        // Let's stick to strict inventory check: (p.inventory?.[activeStoreId] || 0) > 0
-
         let results = products;
 
-        // Filter by Store Availability (Mocking "Global" if no inventory system used yet? No, better be strict or the feature is meaningless)
-        // However, existing data (mock) has no inventory. I should probably allow all for now if inventory is undefined, 
-        // to avoid empty POS on first load.
-        // Better strategy: Filter by store ONLY if inventory object has keys.
         if (activeStoreId) {
             results = results.filter(p => {
-                // If product has comprehensive inventory tracking
                 if (p.inventory && Object.keys(p.inventory).length > 0) {
                     return (p.inventory[activeStoreId] || 0) > 0;
                 }
-                // If it's a legacy product/mock without detailed inventory, show it for now
-                // to avoid breaking the demo.
                 return true;
             });
         }
@@ -118,7 +104,6 @@ export const PosPage: React.FC = () => {
             );
         }
 
-        // Override stock with Store Specific Stock for display and logic
         if (activeStoreId) {
             results = results.map(p => ({
                 ...p,
@@ -131,63 +116,32 @@ export const PosPage: React.FC = () => {
 
     const addToCartWrapper = (product: Product) => {
         if (product.associatedProducts && product.associatedProducts.length > 0) {
-            // It's a special product container/bundle
             let productsAdded = 0;
 
             product.associatedProducts.forEach(assoc => {
                 let componentProduct = products.find(p => p.id === assoc.productId);
 
                 if (componentProduct) {
-                    // Important: Override stock with store specific stock for the component too
                     if (activeStoreId) {
                         componentProduct = {
                             ...componentProduct,
                             stock: componentProduct.inventory?.[activeStoreId] || 0
                         };
                     }
-                    // Determine special unit price from the bundle configuration
-                    // If bundlePrice is set, unit price is bundlePrice / quantity
-                    // Fallback to 0 or ratio? 
-                    // Since we refactored to explicit pricing, let's look for bundlePrice.
-                    // If migration happened, it might be 0.
 
                     let specialUnitPrice = 0;
                     if (assoc.bundlePrice !== undefined && assoc.bundlePrice > 0) {
                         specialUnitPrice = assoc.bundlePrice / assoc.quantity;
                     } else {
-                        // Fallback for legacy or unpriced bundles: Keep original price? 
-                        // Or try to calculate ratio? User said "price field in bundle form no longer needed".
-                        // Use component original price if no bundle price defined?
-                        // Or maybe the ratio of product.price / total? 
-                        // Safer to fallback to ratio if product.price > 0, otherwise component price.
-
-                        // Let's implement robust fallback:
-                        // If product.price (bundle total) is > 0, we can try to distribute it.
-                        // But strictly per request: use the defined price.
-                        // If 0, then it's free in the bundle?
                         specialUnitPrice = 0;
                     }
 
-                    // We need to cast assoc to access bundlePrice if Typescript complains, 
-                    // but we updated types.ts so it should be fine.
-                    // However, at runtime, old data might not have it.
-
-                    // Force type assertion if needed or just access property
                     const bundlePrice = (assoc as any).bundlePrice;
-
                     if (bundlePrice !== undefined && bundlePrice >= 0) {
                         specialUnitPrice = bundlePrice / assoc.quantity;
                     } else {
-                        // Fallback: Ratio based distribution (legacy behavior support)
-                        // Calculate this ONLY if needed to avoid overhead
-                        // For now, let's assume new bundles have price.
-                        // But for existing ones, we might break pricing. 
-                        // Check if `product.price` is set.
                         if (product.price > 0) {
-                            // Re-calc standard total for ratio
-                            // optimized: calculate ratio once if needed?
-                            // Let's simplified: If explicit price exists, use it.
-                            specialUnitPrice = componentProduct.price; // Default to normal if undefined
+                            specialUnitPrice = componentProduct.price;
                         }
                     }
 
@@ -195,28 +149,20 @@ export const PosPage: React.FC = () => {
                     productsAdded++;
                 }
             });
-
-            if (productsAdded > 0) {
-                // Optional: Show a toast? 
-            }
         } else {
-            // Normal product
             addToCart(product);
         }
     };
 
-    // Auto-add effect with Debounce
-    // We strictly wait for the user to stop typing to avoid "Prefix" issues (e.g. typing '1234' but '123' matches).
     useEffect(() => {
         if (!searchQuery) return;
 
         const timer = setTimeout(() => {
-            // Only auto-add if there is exactly one match
             if (filteredProducts.length === 1) {
                 addToCartWrapper(filteredProducts[0]);
                 setSearchQuery('');
             }
-        }, 500); // 500ms delay
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [filteredProducts, searchQuery, addToCart]);
@@ -224,15 +170,12 @@ export const PosPage: React.FC = () => {
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && searchQuery) {
             e.preventDefault();
-
-            // Prioritize Exact Barcode Match on Enter
             const exactBarcodeMatch = filteredProducts.find(p => p.barcode.toLowerCase() === searchQuery.toLowerCase());
 
             if (exactBarcodeMatch) {
                 addToCartWrapper(exactBarcodeMatch);
                 setSearchQuery('');
             } else if (filteredProducts.length === 1) {
-                // Determine if unique match
                 addToCartWrapper(filteredProducts[0]);
                 setSearchQuery('');
             }
@@ -245,8 +188,9 @@ export const PosPage: React.FC = () => {
             return;
         }
 
-        if (confirm(`¿Proceder al cobro de $${total.toFixed(2)}?`)) {
-            // Deduct stock using bulk update
+        const clientMsg = selectedClient ? `Cliente: ${selectedClient.fullName}\n` : '';
+
+        if (confirm(`${clientMsg}¿Proceder al cobro de $${total.toFixed(2)}?`)) {
             const movements = cart.map(item => ({
                 productId: item.id,
                 storeId: activeStoreId,
@@ -255,17 +199,42 @@ export const PosPage: React.FC = () => {
 
             updateStockBulk(movements);
 
-            alert('Venta realizada con éxito!');
+            alert(`Venta realizada con éxito! ${selectedClient ? `(Cliente: ${selectedClient.fullName})` : ''}`);
             clearCart();
+            setSelectedClient(null);
         }
     };
 
     const handleQuickAdd = (data: Omit<Product, 'id'>) => {
         addProduct(data);
         setIsAddModalOpen(false);
-        // Optionally auto-add to cart or focus search
     };
 
+    // Client Handlers
+    const handleClientAdd = () => {
+        setEditingClient(undefined);
+        setIsClientModalOpen(true);
+    };
+
+    const handleClientEdit = (client: Client) => {
+        setEditingClient(client);
+        setIsClientModalOpen(true);
+    };
+
+    const handleClientFormSubmit = (data: Omit<Client, 'id'>) => {
+        if (editingClient) {
+            updateClient(editingClient.id, data);
+            // Update local selected state if editing the active one
+            if (selectedClient && selectedClient.id === editingClient.id) {
+                setSelectedClient({ ...data, id: editingClient.id });
+            }
+        } else {
+            addClient(data);
+            // Note: We can't auto-select here easily without knowing the new ID immediately,
+            // but the user can search for it immediately.
+        }
+        setIsClientModalOpen(false);
+    };
 
 
     return (
@@ -314,17 +283,28 @@ export const PosPage: React.FC = () => {
                 }}
             />
 
-            <div className="pos-sidebar" style={{ width: `${sidebarWidth}px` }}>
-                <PosCart
-                    cart={cart}
-                    total={total}
-                    onUpdateQuantity={updateQuantity}
-                    onSetQuantity={setItemQuantity}
-                    onRemove={removeFromCart}
-                    onCheckout={handleCheckout}
-                    onTogglePrice={toggleItemPrice}
-                    onUpdateItem={updateItem}
-                />
+            <div className="pos-sidebar" style={{ width: `${sidebarWidth}px`, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '1rem 1rem 0 1rem' }}>
+                    <PosClientSelector
+                        selectedClient={selectedClient}
+                        onSelect={setSelectedClient}
+                        searchClients={searchClients}
+                        onAdd={handleClientAdd}
+                        onEdit={handleClientEdit}
+                    />
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <PosCart
+                        cart={cart}
+                        total={total}
+                        onUpdateQuantity={updateQuantity}
+                        onSetQuantity={setItemQuantity}
+                        onRemove={removeFromCart}
+                        onCheckout={handleCheckout}
+                        onTogglePrice={toggleItemPrice}
+                        onUpdateItem={updateItem}
+                    />
+                </div>
             </div>
 
             <Modal
@@ -338,6 +318,19 @@ export const PosPage: React.FC = () => {
                         onCancel={() => setIsAddModalOpen(false)}
                     />
                 </div>
+            </Modal>
+
+            {/* Client Modal */}
+            <Modal
+                isOpen={isClientModalOpen}
+                onClose={() => setIsClientModalOpen(false)}
+                title={editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}
+            >
+                <ClientForm
+                    initialData={editingClient}
+                    onSubmit={handleClientFormSubmit}
+                    onCancel={() => setIsClientModalOpen(false)}
+                />
             </Modal>
         </div>
     );

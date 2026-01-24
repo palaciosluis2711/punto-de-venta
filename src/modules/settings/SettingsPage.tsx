@@ -4,8 +4,9 @@ import { BrandsSettings } from './components/BrandsSettings';
 import { UnitsSettings } from './components/UnitsSettings';
 import { StoresSettings } from './components/StoresSettings';
 import { TaxesSettings } from './components/TaxesSettings';
+import { RulesSettings } from './components/RulesSettings';
 
-type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes';
+type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes' | 'rules';
 
 export const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SettingsTab>('categories');
@@ -99,6 +100,22 @@ export const SettingsPage: React.FC = () => {
                     >
                         Impuestos
                     </button>
+                    <button
+                        onClick={() => setActiveTab('rules')}
+                        className={`text-left px-3 py-2 rounded-md font-medium transition-all ${activeTab === 'rules' ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface-hover hover:text-main'}`}
+                        style={{
+                            textAlign: 'left',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: activeTab === 'rules' ? 'var(--surface-hover)' : 'transparent',
+                            color: activeTab === 'rules' ? 'var(--primary)' : 'var(--text-muted)',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Reglas de Precio
+                    </button>
                 </nav>
             </aside>
 
@@ -108,6 +125,7 @@ export const SettingsPage: React.FC = () => {
                 {activeTab === 'units' && <UnitsSettings />}
                 {activeTab === 'stores' && <StoresSettings />}
                 {activeTab === 'taxes' && <TaxesSettings />}
+                {activeTab === 'rules' && <RulesSettings />}
             </main>
         </div>
     );
