@@ -13,4 +13,5 @@ export interface Client {
     municipality: string;
     address: string;
     isLargeTaxpayer: boolean;
+    isDefault?: boolean;
 }

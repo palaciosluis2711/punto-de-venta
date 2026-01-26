@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Minus, Plus, Trash2, CreditCard, ArrowLeft, Percent, DollarSign, Calculator } from 'lucide-react';
+import { Minus, Plus, Trash2, CreditCard, ArrowLeft, Percent, DollarSign, Calculator, RotateCcw } from 'lucide-react';
 import type { CartItem } from '../hooks/useCart';
 import { useRules } from '../../settings/hooks/useRules';
 import { Button } from '../../../shared/components/Button';
@@ -173,54 +173,67 @@ export const PosCart: React.FC<PosCartProps> = ({
                                             position: 'absolute',
                                             top: '100%',
                                             left: '0',
-                                            minWidth: '220px',
+                                            minWidth: '200px',
                                             backgroundColor: 'var(--surface)',
                                             border: '1px solid var(--border)',
-                                            borderRadius: 'var(--radius-md)',
+                                            borderRadius: 'var(--radius-lg)',
                                             padding: '0.75rem',
                                             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                                             zIndex: 50,
-                                            marginTop: '4px'
+                                            marginTop: '8px'
                                         }}
                                     >
-                                        <div className="text-xs font-semibold mb-2 text-foreground pb-1 border-b">Seleccionar Precio</div>
-                                        <div className="flex flex-col gap-2">
+                                        <div className="text-xs font-semibold mb-4 text-foreground pb-1 border-b">Modo de Precio</div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.50rem' }}>
+                                            {/* Package Price Option */}
                                             <button
-                                                className={`text-xs p-2 rounded flex justify-between items-center ${item.isSpecialPrice ? 'bg-success/20 text-success ring-1 ring-success' : 'hover:bg-muted text-muted-foreground'}`}
-                                                style={{ width: '100%', padding: '0.5rem' }}
+                                                className={`btn-soft ${item.isSpecialPrice ? 'btn-soft-success ring-1 ring-emerald-500/30' : 'btn-soft-neutral opacity-70 hover:opacity-100'} flex justify-between items-center w-full`}
                                                 onClick={() => {
                                                     onTogglePrice(item.id, true);
                                                     setActivePriceEditId(null);
                                                 }}
                                                 disabled={item.specialPrice === undefined}
+                                                style={{ height: 'auto', padding: '0.5rem 0.75rem' }}
                                             >
                                                 <span className="font-medium">Paquete</span>
-                                                <span>${item.specialPrice?.toFixed(2) ?? 'N/A'}</span>
+                                                <span>${item.specialPrice?.toFixed(2) ?? '-.--'}</span>
                                             </button>
+
+                                            {/* Normal Price Option */}
                                             <button
-                                                className={`text-xs p-2 rounded flex justify-between items-center ${!item.isSpecialPrice && !item.manualPrice ? 'bg-primary/20 text-primary ring-1 ring-primary' : 'hover:bg-muted text-muted-foreground'}`}
-                                                style={{ width: '100%', padding: '0.5rem' }}
+                                                className={`btn-soft ${!item.isSpecialPrice && !item.manualPrice ? 'btn-soft-primary ring-1 ring-blue-500/30' : 'btn-soft-neutral opacity-70 hover:opacity-100'} flex justify-between items-center w-full`}
                                                 onClick={() => {
                                                     onTogglePrice(item.id, false);
                                                     onUpdateItem(item.id, { manualPrice: undefined });
                                                     setActivePriceEditId(null);
                                                 }}
+                                                style={{ height: 'auto', padding: '0.5rem 0.75rem' }}
                                             >
                                                 <span className="font-medium">Normal</span>
                                                 <span>${item.originalPrice.toFixed(2)}</span>
                                             </button>
+
+                                            {/* Manual Price Display */}
                                             {item.manualPrice && (
-                                                <button
-                                                    className="text-xs p-2 rounded flex justify-between items-center bg-blue-100 text-blue-700 ring-1 ring-blue-300"
-                                                    style={{ width: '100%', padding: '0.5rem' }}
-                                                    onClick={() => setActivePriceEditId(null)}
-                                                >
-                                                    <span className="font-medium">Manual</span>
-                                                    <span>${item.manualPrice.toFixed(2)}</span>
-                                                </button>
+                                                <div className="flex items-center justify-between p-2 mt-1 bg-blue-50 text-blue-700 rounded text-xs border border-blue-100">
+                                                    <span className="font-medium">Personalizado</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold">${item.manualPrice.toFixed(2)}</span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onUpdateItem(item.id, { manualPrice: undefined });
+                                                            }}
+                                                            className="text-muted-foreground hover:text-red-500 transition-colors"
+                                                            title="Revertir"
+                                                        >
+                                                            <RotateCcw size={12} />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
-                                        <button className="text-[10px] text-muted mt-2 w-full text-center hover:underline" onClick={() => setActivePriceEditId(null)}>Cerrar</button>
                                     </div>
                                 )}
                             </div>

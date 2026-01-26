@@ -40,7 +40,16 @@ export const ClientTable: React.FC<ClientTableProps> = ({ clients, onEdit, onDel
                             >
                                 <td style={{ padding: '0.75rem' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: 500 }}>{client.fullName}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <span style={{ fontWeight: 500 }}>{client.fullName}</span>
+                                            {client.isDefault && (
+                                                <div title="Cliente Default (Selección Automática)" style={{ color: 'var(--warning, #f59e0b)' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </div>
                                         {client.commercialActivity && (
                                             <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{client.commercialActivity}</span>
                                         )}

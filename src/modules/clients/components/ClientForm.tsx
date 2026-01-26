@@ -25,7 +25,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
         district: '',
         municipality: '',
         address: '',
-        isLargeTaxpayer: false
+        isLargeTaxpayer: false,
+        isDefault: false
     });
 
     useEffect(() => {
@@ -134,7 +135,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                         value={formData.ncr}
                         onChange={e => handleNcrChange(e.target.value)}
                     />
-                    <div className="input-wrapper" style={{ justifyContent: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <div className="input-wrapper" style={{ justifyContent: 'center', height: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -144,6 +145,37 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                             />
                             <span className="text-sm font-medium">Retención IVA (Gran Contribuyente)</span>
                         </label>
+
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}>
+                            <div
+                                style={{
+                                    display: 'inline-flex',
+                                    width: '32px',
+                                    height: '18px',
+                                    backgroundColor: formData.isDefault ? 'var(--primary)' : '#e5e7eb',
+                                    borderRadius: '9999px',
+                                    position: 'relative',
+                                    transition: 'background-color 0.2s',
+                                    flexShrink: 0
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        backgroundColor: 'white',
+                                        borderRadius: '50%',
+                                        position: 'absolute',
+                                        top: '2px',
+                                        left: '2px',
+                                        transform: formData.isDefault ? 'translateX(14px)' : 'translateX(0)',
+                                        transition: 'transform 0.2s',
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                    }}
+                                />
+                            </div>
+                            <span className="text-sm font-medium text-muted-foreground select-none">Establecer como Default</span>
+                        </div>
                     </div>
                 </div>
 
@@ -252,6 +284,6 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                     {initialData ? 'Guardar Cambios' : 'Registrar Cliente'}
                 </Button>
             </div>
-        </form>
+        </form >
     );
 };

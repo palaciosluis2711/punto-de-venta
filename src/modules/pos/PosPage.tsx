@@ -31,7 +31,7 @@ export const PosPage: React.FC = () => {
         toggleItemPrice,
         total
     } = useCart();
-    const { searchClients, addClient, updateClient } = useClients();
+    const { clients, searchClients, addClient, updateClient } = useClients();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -40,6 +40,49 @@ export const PosPage: React.FC = () => {
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
+
+    // Track if we have performed the initial auto-selection
+    const hasAutoSelected = React.useRef(false);
+
+    // Wrapper to handle persistence of user preference
+    const handleClientSelection = (client: Client | null) => {
+        setSelectedClient(client);
+        if (client === null) {
+            localStorage.setItem('pos_manual_client_deselect', 'true');
+            localStorage.removeItem('pos_selected_client_id');
+        } else {
+            localStorage.removeItem('pos_manual_client_deselect');
+            localStorage.setItem('pos_selected_client_id', client.id);
+        }
+    };
+
+    // Auto-select logic on mount (Prioritize Saved Selection -> Manual Deselect -> Default -> First)
+    useEffect(() => {
+        if (!hasAutoSelected.current && clients.length > 0) {
+            // 1. Try to restore specifically selected client
+            const savedClientId = localStorage.getItem('pos_selected_client_id');
+            if (savedClientId) {
+                const savedClient = clients.find(c => c.id === savedClientId);
+                if (savedClient) {
+                    setSelectedClient(savedClient);
+                    hasAutoSelected.current = true;
+                    return;
+                }
+            }
+
+            // 2. Check if user explicitly deselected
+            const wasManuallyDeselected = localStorage.getItem('pos_manual_client_deselect') === 'true';
+            if (wasManuallyDeselected) {
+                hasAutoSelected.current = true;
+                return;
+            }
+
+            // 3. Fallback to Default Client
+            const defaultClient = clients.find(c => c.isDefault);
+            setSelectedClient(defaultClient || clients[0]);
+            hasAutoSelected.current = true;
+        }
+    }, [clients]);
 
     // Sidebar Resize Logic
     const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -188,7 +231,14 @@ export const PosPage: React.FC = () => {
             return;
         }
 
-        const clientMsg = selectedClient ? `Cliente: ${selectedClient.fullName}\n` : '';
+        // Auto-select default client if none is selected
+        let finalClient = selectedClient;
+        if (!finalClient && clients.length > 0) {
+            finalClient = clients.find(c => c.isDefault) || clients[0];
+            setSelectedClient(finalClient); // Update UI to show it was selected
+        }
+
+        const clientMsg = finalClient ? `Cliente: ${finalClient.fullName}\n` : '';
 
         if (confirm(`${clientMsg}¿Proceder al cobro de $${total.toFixed(2)}?`)) {
             const movements = cart.map(item => ({
@@ -199,9 +249,16 @@ export const PosPage: React.FC = () => {
 
             updateStockBulk(movements);
 
-            alert(`Venta realizada con éxito! ${selectedClient ? `(Cliente: ${selectedClient.fullName})` : ''}`);
+            alert(`Venta realizada con éxito! ${finalClient ? `(Cliente: ${finalClient.fullName})` : ''}`);
             clearCart();
-            setSelectedClient(null);
+
+            // Reset to Default Client for the next sale
+            const defaultClient = clients.find(c => c.isDefault) || clients[0] || null;
+            setSelectedClient(defaultClient);
+
+            // Reset manual deselect preference on successful checkout so next sale starts with default
+            localStorage.removeItem('pos_manual_client_deselect');
+            localStorage.removeItem('pos_selected_client_id');
         }
     };
 
@@ -287,7 +344,7 @@ export const PosPage: React.FC = () => {
                 <div style={{ padding: '1rem 1rem 0 1rem' }}>
                     <PosClientSelector
                         selectedClient={selectedClient}
-                        onSelect={setSelectedClient}
+                        onSelect={handleClientSelection}
                         searchClients={searchClients}
                         onAdd={handleClientAdd}
                         onEdit={handleClientEdit}

@@ -18,13 +18,31 @@ export const useClients = () => {
             ...data,
             id: crypto.randomUUID()
         };
-        setClients(prev => [...prev, newClient]);
+
+        // If new client is default, unset others
+        if (newClient.isDefault) {
+            setClients(prev => {
+                const updatedPrev = prev.map(c => ({ ...c, isDefault: false } as Client));
+                return [...updatedPrev, newClient];
+            });
+        } else {
+            setClients(prev => [...prev, newClient]);
+        }
     }, []);
 
     const updateClient = useCallback((id: string, data: Partial<Client>) => {
-        setClients(prev => prev.map(client =>
-            client.id === id ? { ...client, ...data } : client
-        ));
+        setClients(prev => {
+            // If setting to default, unset others
+            if (data.isDefault) {
+                return prev.map(client =>
+                    client.id === id ? { ...client, ...data } : { ...client, isDefault: false }
+                );
+            }
+            // Standard update
+            return prev.map(client =>
+                client.id === id ? { ...client, ...data } : client
+            );
+        });
     }, []);
 
     const deleteClient = useCallback((id: string) => {
