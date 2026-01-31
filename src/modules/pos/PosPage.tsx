@@ -13,6 +13,10 @@ import { Modal } from '../../shared/components/Modal';
 import { ProductForm } from '../inventory/components/ProductForm';
 import type { Product } from '../inventory/types';
 import type { Client } from '../clients/types';
+import { PosFinalizeSaleModal, type FinalizeSaleData } from './components/PosFinalizeSaleModal';
+import { PostSaleView } from './components/PostSaleView';
+import { useSales } from '../sales/hooks/useSales';
+import type { Sale } from '../sales/types';
 import './PosPage.css';
 
 import { useOutletContext } from 'react-router-dom';
@@ -32,6 +36,7 @@ export const PosPage: React.FC = () => {
         total
     } = useCart();
     const { clients, searchClients, addClient, updateClient } = useClients();
+    const { addSale } = useSales();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -40,6 +45,18 @@ export const PosPage: React.FC = () => {
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
+
+    // Finalize Sale Modal State
+    const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+
+    // Post Sale Modal State
+    const [lastCompletedSale, setLastCompletedSale] = useState<Sale | null>(() => {
+        const saved = localStorage.getItem('pos_last_completed_sale');
+        return saved ? JSON.parse(saved) : null;
+    });
+    const [isPostSaleModalOpen, setIsPostSaleModalOpen] = useState(() => {
+        return !!localStorage.getItem('pos_last_completed_sale');
+    });
 
     // Track if we have performed the initial auto-selection
     const hasAutoSelected = React.useRef(false);
@@ -225,41 +242,81 @@ export const PosPage: React.FC = () => {
         }
     };
 
-    const handleCheckout = () => {
+    const handleCheckoutClick = () => {
         if (!activeStoreId) {
             alert("Error: No se ha detectado una tienda activa para descontar inventario.");
             return;
         }
 
         // Auto-select default client if none is selected
-        let finalClient = selectedClient;
-        if (!finalClient && clients.length > 0) {
-            finalClient = clients.find(c => c.isDefault) || clients[0];
-            setSelectedClient(finalClient); // Update UI to show it was selected
-        }
-
-        const clientMsg = finalClient ? `Cliente: ${finalClient.fullName}\n` : '';
-
-        if (confirm(`${clientMsg}¿Proceder al cobro de $${total.toFixed(2)}?`)) {
-            const movements = cart.map(item => ({
-                productId: item.id,
-                storeId: activeStoreId,
-                quantity: -item.quantity
-            }));
-
-            updateStockBulk(movements);
-
-            alert(`Venta realizada con éxito! ${finalClient ? `(Cliente: ${finalClient.fullName})` : ''}`);
-            clearCart();
-
-            // Reset to Default Client for the next sale
-            const defaultClient = clients.find(c => c.isDefault) || clients[0] || null;
+        if (!selectedClient && clients.length > 0) {
+            const defaultClient = clients.find(c => c.isDefault) || clients[0];
             setSelectedClient(defaultClient);
-
-            // Reset manual deselect preference on successful checkout so next sale starts with default
-            localStorage.removeItem('pos_manual_client_deselect');
-            localStorage.removeItem('pos_selected_client_id');
         }
+
+        setIsFinalizeModalOpen(true);
+    };
+
+    const handleFinalizeSale = (data: FinalizeSaleData) => {
+        const movements = cart.map(item => ({
+            productId: item.id,
+            storeId: activeStoreId,
+            quantity: -item.quantity
+        }));
+
+        updateStockBulk(movements);
+
+        // Create Sale Object
+        const newSale: Sale = {
+            id: Date.now().toString(),
+            date: new Date().toISOString(),
+            total: data.finalTotal,
+            items: cart.map(item => ({
+                productId: item.id,
+                productName: item.name,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                subtotal: item.price * item.quantity,
+                isSpecialPrice: item.isSpecialPrice
+            })),
+            paymentMethod: data.paymentMethod,
+            clientName: selectedClient ? selectedClient.fullName : 'Cliente General',
+            storeId: activeStoreId,
+            storeName: 'Tienda Principal', // TODO: Get Store Name dynamically
+            notes: data.notes,
+            discount: data.discount.type === 'fixed' ? data.discount.value : (total * data.discount.value / 100),
+            shipping: data.shipping,
+            receivedAmount: data.receivedAmount,
+            change: data.change,
+            status: 'completed'
+        };
+
+        // Save Sale
+        addSale(newSale);
+
+        // Store sale for preview and Open Preview Modal
+        setLastCompletedSale(newSale);
+        setIsPostSaleModalOpen(true);
+        localStorage.setItem('pos_last_completed_sale', JSON.stringify(newSale));
+
+        // Clear Cart and Close Finalize Modal
+        clearCart();
+        setIsFinalizeModalOpen(false);
+
+        // Reset to Default Client for the next sale (will be ready when modal closes)
+        const defaultClient = clients.find(c => c.isDefault) || clients[0] || null;
+        setSelectedClient(defaultClient);
+
+        // Reset manual deselect preference
+        localStorage.removeItem('pos_manual_client_deselect');
+        localStorage.removeItem('pos_selected_client_id');
+    };
+
+    const handlePostSaleClose = () => {
+        setIsPostSaleModalOpen(false);
+        setLastCompletedSale(null);
+        localStorage.removeItem('pos_last_completed_sale');
+        // Focus search input if possible, or just be ready
     };
 
     const handleQuickAdd = (data: Omit<Product, 'id'>) => {
@@ -357,7 +414,7 @@ export const PosPage: React.FC = () => {
                         onUpdateQuantity={updateQuantity}
                         onSetQuantity={setItemQuantity}
                         onRemove={removeFromCart}
-                        onCheckout={handleCheckout}
+                        onCheckout={handleCheckoutClick}
                         onTogglePrice={toggleItemPrice}
                         onUpdateItem={updateItem}
                     />
@@ -389,6 +446,22 @@ export const PosPage: React.FC = () => {
                     onCancel={() => setIsClientModalOpen(false)}
                 />
             </Modal>
+
+            {/* Finalize Sale Modal */}
+            <PosFinalizeSaleModal
+                isOpen={isFinalizeModalOpen}
+                onClose={() => setIsFinalizeModalOpen(false)}
+                onConfirm={handleFinalizeSale}
+                total={total}
+                client={selectedClient}
+            />
+
+            {/* Post Sale Preview View */}
+            <PostSaleView
+                isOpen={isPostSaleModalOpen}
+                onClose={handlePostSaleClose}
+                sale={lastCompletedSale}
+            />
         </div>
     );
 };

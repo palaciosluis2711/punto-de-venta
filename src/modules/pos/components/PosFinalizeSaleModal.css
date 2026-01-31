@@ -1,0 +1,233 @@
+.finalize-modal-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+/* Left Column */
+.finalize-col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+/* Payment Methods Grid */
+.payment-methods-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.payment-method-chip {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-method-chip:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary-light);
+}
+
+.payment-method-chip.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 500;
+}
+
+/* Quick Cash */
+.quick-cash-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-cash-chip {
+    padding: 0.25rem 0.75rem;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quick-cash-chip:hover {
+    background: var(--border);
+}
+
+.input-large-text input {
+    font-size: 1.5rem;
+    font-weight: 600;
+    height: 3.5rem;
+    color: var(--text-primary);
+}
+
+/* Discounts & Costs */
+.costs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.input-group-merged {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.input-group-merged input {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+}
+
+.toggle-group {
+    display: flex;
+    border-left: 1px solid var(--border);
+    background: var(--surface-hover);
+}
+
+.toggle-group button {
+    padding: 0 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.toggle-group button.active {
+    background: var(--primary);
+    color: white;
+}
+
+.notes-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Right Column */
+.finalize-col-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.summary-card {
+    background: var(--surface-hover);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.summary-row.discount {
+    color: var(--success);
+}
+
+.summary-row.shipping {
+    color: var(--warning);
+}
+
+.summary-row.total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0.5rem;
+}
+
+.summary-row.highlight {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.summary-row.change {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.summary-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0;
+}
+
+.submit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn-finalize {
+    height: 3.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.btn-finalize:hover {
+    background: var(--success-dark);
+    border-color: var(--success-dark);
+}
+
+.btn-finalize:disabled {
+    background: var(--text-muted);
+    border-color: var(--text-muted);
+    opacity: 0.5;
+}

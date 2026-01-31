@@ -7,11 +7,12 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
 import { createPortal } from 'react-dom';
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth }) => {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -30,7 +31,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content animate-in" onClick={e => e.stopPropagation()}>
+            <div className="modal-content animate-in" onClick={e => e.stopPropagation()} style={{ maxWidth: maxWidth }}>
                 <div className="modal-header">
                     <h3 className="modal-title">{title}</h3>
                     <button className="modal-close" onClick={onClose}>

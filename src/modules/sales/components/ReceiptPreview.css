@@ -1,0 +1,35 @@
+/* Base Styles for the Preview */
+.receipt-preview-container {
+    box-sizing: border-box;
+}
+
+/* Print Specific Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .receipt-preview-container,
+    .receipt-preview-container * {
+        visibility: visible;
+    }
+
+    .receipt-preview-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        /* Let printer driver handle width or constrain it */
+        max-width: 100% !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Hide any modals or overlays */
+    .modal-overlay,
+    .modal-content,
+    .no-print {
+        display: none !important;
+    }
+}

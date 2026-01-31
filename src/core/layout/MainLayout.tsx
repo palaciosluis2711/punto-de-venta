@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck, ShoppingBag, ChevronDown, ArrowRightLeft, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck, ShoppingBag, ChevronDown, ArrowRightLeft, Users, CreditCard } from 'lucide-react';
 import './MainLayout.css';
 
 import { useStores } from '../../modules/settings/hooks/useStores';
@@ -57,6 +57,11 @@ export const MainLayout: React.FC = () => {
                     <NavLink to="/transfers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <ArrowRightLeft size={20} />
                         <span>Transferencias</span>
+                    </NavLink>
+
+                    <NavLink to="/sales" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <CreditCard size={20} />
+                        <span>Ventas</span>
                     </NavLink>
 
                     <NavLink to="/pos" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
