@@ -16,6 +16,7 @@ import type { Client } from '../clients/types';
 import { PosFinalizeSaleModal, type FinalizeSaleData } from './components/PosFinalizeSaleModal';
 import { PostSaleView } from './components/PostSaleView';
 import { useSales } from '../sales/hooks/useSales';
+import { useStores } from '../settings/hooks/useStores';
 import type { Sale } from '../sales/types';
 import './PosPage.css';
 
@@ -37,6 +38,7 @@ export const PosPage: React.FC = () => {
     } = useCart();
     const { clients, searchClients, addClient, updateClient } = useClients();
     const { addSale } = useSales();
+    const { stores } = useStores();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -282,7 +284,7 @@ export const PosPage: React.FC = () => {
             paymentMethod: data.paymentMethod,
             clientName: selectedClient ? selectedClient.fullName : 'Cliente General',
             storeId: activeStoreId,
-            storeName: 'Tienda Principal', // TODO: Get Store Name dynamically
+            storeName: stores.find(s => s.id === activeStoreId)?.name || 'Tienda Principal',
             notes: data.notes,
             discount: data.discount.type === 'fixed' ? data.discount.value : (total * data.discount.value / 100),
             shipping: data.shipping,

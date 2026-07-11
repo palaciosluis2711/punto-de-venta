@@ -82,8 +82,15 @@
     transition: all 0.15s;
 }
 
-.quick-cash-chip:hover {
+.quick-cash-chip:hover:not(:disabled) {
     background: var(--border);
+}
+
+.quick-cash-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--surface);
+    color: var(--text-muted);
 }
 
 .input-large-text input {

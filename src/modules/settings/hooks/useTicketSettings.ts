@@ -4,10 +4,12 @@ export interface TicketSettings {
     storeName: string;
     address: string;
     phone: string;
-    rfc: string;
+    nit: string;
+    nrc: string;
     website: string;
     footerMessage: string;
     logoUrl?: string; // Data URL or Image URL
+    logoFileName?: string; // Original filename
     showLogo: boolean;
     showClient: boolean;
     showAddress: boolean;
@@ -18,7 +20,8 @@ const DEFAULT_SETTINGS: TicketSettings = {
     storeName: 'Mi Tienda',
     address: 'Dirección de la tienda',
     phone: '',
-    rfc: '',
+    nit: '',
+    nrc: '',
     website: '',
     footerMessage: '¡Gracias por su compra!',
     showLogo: true,

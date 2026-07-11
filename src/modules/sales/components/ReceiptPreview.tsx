@@ -39,7 +39,8 @@ export const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({
                 {settings.storeName && <h2 style={{ fontSize: '1.2em', fontWeight: 'bold', margin: '4px 0' }}>{settings.storeName}</h2>}
                 {settings.showAddress && settings.address && <p style={{ margin: '2px 0' }}>{settings.address}</p>}
                 {settings.phone && <p style={{ margin: '2px 0' }}>Tel: {settings.phone}</p>}
-                {settings.rfc && <p style={{ margin: '2px 0' }}>RFC: {settings.rfc}</p>}
+                {settings.nit && <p style={{ margin: '2px 0' }}>NIT: {settings.nit}</p>}
+                {settings.nrc && <p style={{ margin: '2px 0' }}>NRC: {settings.nrc}</p>}
                 {settings.website && <p style={{ margin: '2px 0' }}>{settings.website}</p>}
             </div>
 

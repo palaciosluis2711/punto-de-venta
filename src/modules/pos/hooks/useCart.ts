@@ -74,7 +74,7 @@ export const useCart = () => {
     const setItemQuantity = (productId: string, quantity: number) => {
         setCart(prev => prev.map(item => {
             if (item.id === productId) {
-                const validQty = Math.max(1, quantity);
+                const validQty = Math.max(0, quantity);
                 return { ...item, quantity: validQty };
             }
             return item;

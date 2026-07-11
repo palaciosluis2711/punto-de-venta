@@ -274,8 +274,16 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                                 <td className="table-cell-center" style={{ padding: '0.5rem' }}>
                                                     <input
                                                         type="number"
-                                                        value={item.quantity}
-                                                        onChange={(e) => handleUpdateItem(index, 'quantity', Number(e.target.value))}
+                                                        value={item.quantity || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                                            handleUpdateItem(index, 'quantity', val);
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!item.quantity || item.quantity < 1) {
+                                                                handleUpdateItem(index, 'quantity', 1);
+                                                            }
+                                                        }}
                                                         min="1"
                                                         className="input-field text-center"
                                                         style={{ padding: '0.25rem' }}

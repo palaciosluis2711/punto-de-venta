@@ -137,7 +137,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
     };
 
     const handleUpdateItem = (index: number, quantity: number) => {
-        if (quantity < 1) return;
+        if (quantity < 0) return;
         setItems(prev => {
             const updated = [...prev];
             const item = { ...updated[index] };
@@ -295,8 +295,16 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                                     <td className="table-cell-center" style={{ padding: '0.5rem' }}>
                                                         <input
                                                             type="number"
-                                                            value={item.quantity}
-                                                            onChange={(e) => handleUpdateItem(index, Number(e.target.value))}
+                                                            value={item.quantity || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                                                handleUpdateItem(index, val);
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (!item.quantity || item.quantity < 1) {
+                                                                    handleUpdateItem(index, 1);
+                                                                }
+                                                            }}
                                                             min="1"
                                                             className={`input-field text-center ${isLowStock ? 'border-danger text-danger' : ''}`}
                                                             style={{ padding: '0.25rem' }}

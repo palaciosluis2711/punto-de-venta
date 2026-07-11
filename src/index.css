@@ -144,3 +144,103 @@ textarea {
 .animate-in {
   animation: fadeIn var(--transition-normal) forwards;
 }
+
+/* Global Print Styles - Fixes Chrome Blank Pages & Margins */
+@media print {
+
+  /* 1. Only hide the main app root if a modal/overlay is open. 
+     This ensures the overlay is the ONLY thing in the document flow, fixing pagination and margins! */
+  body:has(.modal-overlay) #root,
+  body:has(.post-sale-overlay) #root {
+    display: none !important;
+  }
+
+  /* 1.5. If post-sale ticket preview is open, hide any underlying modals (like Sales History detail) during print */
+  body:has(.post-sale-overlay) .modal-overlay {
+    display: none !important;
+  }
+
+  /* 2. Reset the body to normal flow */
+  html,
+  body {
+    height: auto !important;
+    min-height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* 3. Disable all animations and transforms that create containing blocks */
+  * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  /* 4. Flatten the Modal & Overlays into the document flow so they act as standard blocks */
+  .layout-container,
+  .main-content,
+  .content-area,
+  .modal-overlay,
+  .modal-content,
+  .modal-body,
+  .post-sale-overlay,
+  .post-sale-container,
+  .ticket-preview-box {
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    width: auto !important;
+    max-height: none !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 5. Hide elements we don't want printed */
+  .sidebar,
+  .top-bar,
+  .modal-header,
+  .modal-close,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 6. Ensure the printable area is just a normal block for perfect pagination and alignment */
+  .printable-area {
+    position: static !important;
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 4.5rem !important;
+    /* A4 page margin simulation */
+    box-sizing: border-box !important;
+  }
+
+  /* 7. Ticket preview needs smaller padding for thermal printers */
+  .receipt-preview-container {
+    position: static !important;
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0.5rem !important;
+    /* Small margin so it doesn't touch the absolute edge */
+    box-sizing: border-box !important;
+    /* Remove fake paper styles when printing on REAL paper */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

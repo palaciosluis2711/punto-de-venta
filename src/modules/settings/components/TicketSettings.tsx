@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useTicketSettings } from '../hooks/useTicketSettings';
 import { Input } from '../../../shared/components/Input';
 import { Button } from '../../../shared/components/Button';
-import { Upload, Trash2, Printer, Ticket } from 'lucide-react';
+import { Upload, Printer, Ticket } from 'lucide-react';
 import { ReceiptPreview } from '../../sales/components/ReceiptPreview';
 import type { Sale } from '../../sales/types';
 import './TicketSettings.css';
@@ -54,7 +54,10 @@ export const TicketSettings: React.FC = () => {
 
         const reader = new FileReader();
         reader.onloadend = () => {
-            updateSettings({ logoUrl: reader.result as string });
+            updateSettings({
+                logoUrl: reader.result as string,
+                logoFileName: file.name
+            });
         };
         reader.readAsDataURL(file);
     };
@@ -80,7 +83,8 @@ export const TicketSettings: React.FC = () => {
                 <div className="settings-main-panel">
                     <div className="form-section">
                         <h3 className="form-section-title">Información del Negocio</h3>
-                        <div className="space-y-4">
+                        <div className="settings-grid">
+                            {/* Row 1 */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">Nombre de la Tienda</label>
                                 <Input
@@ -90,7 +94,27 @@ export const TicketSettings: React.FC = () => {
                                 />
                             </div>
 
-                            <div>
+                            <div className="settings-grid">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">NIT</label>
+                                    <Input
+                                        value={settings.nit}
+                                        onChange={(e) => updateSettings({ nit: e.target.value })}
+                                        placeholder="NIT"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">NRC</label>
+                                    <Input
+                                        value={settings.nrc}
+                                        onChange={(e) => updateSettings({ nrc: e.target.value })}
+                                        placeholder="NRC"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 2 */}
+                            <div className="settings-col-full">
                                 <label className="block text-sm font-medium mb-1">Dirección</label>
                                 <Input
                                     value={settings.address}
@@ -99,23 +123,14 @@ export const TicketSettings: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Teléfono</label>
-                                    <Input
-                                        value={settings.phone}
-                                        onChange={(e) => updateSettings({ phone: e.target.value })}
-                                        placeholder="Teléfono"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">RFC / ID Fiscal</label>
-                                    <Input
-                                        value={settings.rfc}
-                                        onChange={(e) => updateSettings({ rfc: e.target.value })}
-                                        placeholder="RFC"
-                                    />
-                                </div>
+                            {/* Row 3 */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Teléfono</label>
+                                <Input
+                                    value={settings.phone}
+                                    onChange={(e) => updateSettings({ phone: e.target.value })}
+                                    placeholder="Teléfono"
+                                />
                             </div>
 
                             <div>
@@ -127,7 +142,8 @@ export const TicketSettings: React.FC = () => {
                                 />
                             </div>
 
-                            <div>
+                            {/* Row 4 */}
+                            <div className="settings-col-full">
                                 <label className="block text-sm font-medium mb-1">Mensaje Pie de Página</label>
                                 <Input
                                     value={settings.footerMessage}
@@ -143,103 +159,132 @@ export const TicketSettings: React.FC = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">Logo del Ticket</label>
-                                <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center text-center hover:bg-muted/30 transition-colors">
-                                    {settings.logoUrl ? (
-                                        <div className="relative">
+                                {settings.logoUrl ? (
+                                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-surface">
+                                        <div className="bg-white p-1 rounded border border-border shadow-sm flex-shrink-0">
                                             <img
                                                 src={settings.logoUrl}
                                                 alt="Ticket Logo"
-                                                className="h-32 object-contain mb-2 bg-white p-2 rounded border"
-                                                style={{ maxWidth: '100%' }}
+                                                className="h-10 w-auto object-contain"
+                                                style={{ maxWidth: '80px' }}
                                             />
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full"
-                                                onClick={() => updateSettings({ logoUrl: undefined })}
-                                            >
-                                                <Trash2 size={14} />
-                                            </Button>
                                         </div>
-                                    ) : (
-                                        <div className="text-muted-foreground py-4">
-                                            <Upload size={32} className="mx-auto mb-2 opacity-50" />
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-sm font-medium truncate">
+                                                Archivo cargado: <span className="font-normal text-text-muted">{settings.logoFileName || 'logo.png'}</span>
+                                            </p>
+                                        </div>
+                                        <div className="options-grid">
+                                            <div
+                                                className="option-chip"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                Cambiar
+                                            </div>
+                                            <div
+                                                className="option-chip text-red-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                                                onClick={() => updateSettings({ logoUrl: undefined, logoFileName: undefined })}
+                                            >
+                                                Quitar Imagen
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center text-center hover:bg-muted/30 transition-colors">
+                                        <div className="text-muted-foreground py-2">
+                                            <Upload size={24} className="mx-auto mb-2 opacity-50" />
                                             <p className="text-sm">Sube tu logo aquí</p>
                                             <p className="text-xs opacity-70">Recomendado: Blanco y Negro, PNG</p>
                                         </div>
-                                    )}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            Seleccionar Imagen
+                                        </Button>
+                                    </div>
+                                )}
 
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={handleLogoUpload}
-                                    />
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="mt-2"
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        {settings.logoUrl ? 'Cambiar Logo' : 'Seleccionar Imagen'}
-                                    </Button>
-                                </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    style={{ display: 'none' }}
+                                    accept="image/*"
+                                    onChange={handleLogoUpload}
+                                />
                             </div>
+                        </div>
+                    </div>
 
+                    <div className="form-section">
+                        <h3 className="form-section-title">Tamaño de Impresión</h3>
+                        <div className="space-y-4">
                             <div className="space-y-3 pt-2">
-                                <div className="flex items-center justify-between p-3 bg-muted/20 rounded-md border border-border">
-                                    <span className="text-sm font-medium">Ancho de Impresión</span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            className={`px-3 py-1 text-xs rounded-md transition-all ${settings.printerWidth === '80mm' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-3 text-text-secondary">Ancho de Papel Térmico</label>
+                                    <div className="options-grid">
+                                        <div
+                                            className={`option-chip ${settings.printerWidth === '80mm' ? 'active' : ''}`}
                                             onClick={() => updateSettings({ printerWidth: '80mm' })}
                                         >
-                                            80mm
-                                        </button>
-                                        <button
-                                            className={`px-3 py-1 text-xs rounded-md transition-all ${settings.printerWidth === '57mm' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}
+                                            80mm (Estándar)
+                                        </div>
+                                        <div
+                                            className={`option-chip ${settings.printerWidth === '57mm' ? 'active' : ''}`}
                                             onClick={() => updateSettings({ printerWidth: '57mm' })}
                                         >
-                                            57mm
-                                        </button>
+                                            57mm (Pequeño)
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-2 p-2">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="showLogo"
-                                            checked={settings.showLogo}
-                                            onChange={(e) => updateSettings({ showLogo: e.target.checked })}
-                                            className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                        />
-                                        <label htmlFor="showLogo" className="text-sm">Mostrar Logo</label>
-                                    </div>
+                                <div className="flex flex-col gap-3" style={{ marginTop: '2rem' }}>
+                                    <label className="toggle-switch-container">
+                                        <span className="toggle-label">Mostrar Logo en Ticket</span>
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                style={{ display: 'none' }}
+                                                checked={settings.showLogo}
+                                                onChange={(e) => updateSettings({ showLogo: e.target.checked })}
+                                            />
+                                            <div className={`toggle-track ${settings.showLogo ? 'active' : ''}`}>
+                                                <div className="toggle-thumb"></div>
+                                            </div>
+                                        </div>
+                                    </label>
 
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="showAddress"
-                                            checked={settings.showAddress}
-                                            onChange={(e) => updateSettings({ showAddress: e.target.checked })}
-                                            className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                        />
-                                        <label htmlFor="showAddress" className="text-sm">Mostrar Dirección</label>
-                                    </div>
+                                    <label className="toggle-switch-container">
+                                        <span className="toggle-label">Mostrar Dirección</span>
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                style={{ display: 'none' }}
+                                                checked={settings.showAddress}
+                                                onChange={(e) => updateSettings({ showAddress: e.target.checked })}
+                                            />
+                                            <div className={`toggle-track ${settings.showAddress ? 'active' : ''}`}>
+                                                <div className="toggle-thumb"></div>
+                                            </div>
+                                        </div>
+                                    </label>
 
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="showClient"
-                                            checked={settings.showClient}
-                                            onChange={(e) => updateSettings({ showClient: e.target.checked })}
-                                            className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                        />
-                                        <label htmlFor="showClient" className="text-sm">Mostrar Datos del Cliente</label>
-                                    </div>
+                                    <label className="toggle-switch-container">
+                                        <span className="toggle-label">Mostrar Datos del Cliente</span>
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                style={{ display: 'none' }}
+                                                checked={settings.showClient}
+                                                onChange={(e) => updateSettings({ showClient: e.target.checked })}
+                                            />
+                                            <div className={`toggle-track ${settings.showClient ? 'active' : ''}`}>
+                                                <div className="toggle-thumb"></div>
+                                            </div>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </div>

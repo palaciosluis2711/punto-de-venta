@@ -1,8 +1,12 @@
+/* Override parent content-area padding just for the sales page */
+.content-area:has(.sales-page) {
+    padding-top: 0.625rem !important;
+}
+
 .sales-page {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 2rem;
     overflow: hidden;
 }
 
@@ -15,7 +19,7 @@
 }
 
 .sales-title {
-    font-size: 1.875rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
@@ -27,7 +31,59 @@
 
 .sales-subtitle {
     color: var(--text-muted);
-    font-size: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Filters */
+.sales-filters-container {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+.sales-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.filter-select {
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.filter-actions {
+    justify-content: flex-end;
+    padding-bottom: 2px; /* Align with inputs */
 }
 
 .sales-table-container {
@@ -122,26 +178,4 @@
     background-color: rgba(239, 68, 68, 0.1);
     color: var(--error);
 }
-
-@media print {
-    body * {
-        visibility: hidden;
-    }
-
-    .printable-area,
-    .printable-area * {
-        visibility: visible;
-    }
-
-    .printable-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 2rem;
-    }
-
-    .no-print {
-        display: none !important;
-    }
-}
+

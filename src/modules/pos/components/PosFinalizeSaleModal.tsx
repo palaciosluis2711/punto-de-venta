@@ -178,6 +178,7 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
                                     key={amount}
                                     type="button"
                                     className="quick-cash-chip"
+                                    disabled={amount < finalTotal}
                                     onClick={() => handleQuickCash(amount)}
                                 >
                                     ${amount}

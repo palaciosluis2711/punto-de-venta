@@ -242,8 +242,15 @@ export const PosCart: React.FC<PosCartProps> = ({
                         <div className="cart-item-actions">
                             <button className="qty-btn" onClick={() => onUpdateQuantity(item.id, -1)} disabled={item.quantity <= 1}><Minus size={14} /></button>
                             <input
-                                type="number" className="qty-input" value={item.quantity}
-                                onChange={(e) => { const val = parseInt(e.target.value); if (!isNaN(val)) onSetQuantity(item.id, val); }}
+                                type="number" className="qty-input" value={item.quantity || ''}
+                                onChange={(e) => { 
+                                    if (e.target.value === '') {
+                                        onSetQuantity(item.id, 0);
+                                    } else {
+                                        const val = parseInt(e.target.value); 
+                                        if (!isNaN(val)) onSetQuantity(item.id, val); 
+                                    }
+                                }}
                                 onBlur={() => { if (!item.quantity || item.quantity < 1) onSetQuantity(item.id, 1); }}
                                 min="1" max={item.stock}
                                 style={{ color: item.quantity > item.stock ? 'var(--error)' : 'inherit' }}

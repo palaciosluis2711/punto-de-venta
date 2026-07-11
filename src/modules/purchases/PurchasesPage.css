@@ -1,13 +1,15 @@
+/* Override parent content-area padding just for the purchases page */
+.content-area:has(.purchases-page) {
+    padding-top: 0.625rem !important;
+}
+
 /* Main Page Layout */
 .purchases-page {
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    padding: 1.5rem;
-    padding-top: 0;
-    /* User Request: Remove top padding */
-    background-color: var(--background);
+    overflow: hidden;
 }
 
 .purchases-header {
@@ -27,6 +29,58 @@
 
 .purchases-subtitle {
     color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Filters */
+.purchases-filters-container {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+.purchases-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.filter-select {
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.filter-actions {
+    justify-content: flex-end;
+    padding-bottom: 2px;
 }
 
 /* Table Styles */
@@ -153,69 +207,6 @@
     z-index: 1;
 }
 
-/* Print Styles */
-@media print {
-    @page {
-        margin: 0;
-        size: auto;
-    }
-
-    /* Completely hide the main application */
-    #root {
-        display: none !important;
-    }
-
-    /* Hide global body content but allowing visible children */
-    body {
-        visibility: hidden;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    /* Handle the modal wrapper */
-    .modal-overlay {
-        visibility: hidden;
-        position: static !important;
-        background: transparent !important;
-        width: auto !important;
-        height: auto !important;
-        display: block !important;
-    }
-
-    .modal-content {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-    }
-
-    /* The main star: Printable Area */
-    .printable-area {
-        visibility: visible;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        margin: 0;
-        padding: 2.5cm;
-        /* Standard letter margin */
-        box-sizing: border-box;
-        background: white;
-        color: black;
-        z-index: 99999;
-    }
-
-    .printable-area * {
-        visibility: visible;
-    }
-
-    .no-print {
-        display: none !important;
-    }
-}
 
 /* FORM STYLES */
 .purchase-form {

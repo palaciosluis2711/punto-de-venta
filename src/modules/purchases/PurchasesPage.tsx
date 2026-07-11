@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from './hooks/usePurchases';
 import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
+import { Input } from '../../shared/components/Input';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
-import { Plus, ShoppingBag, Eye, Printer, RotateCcw, Edit } from 'lucide-react';
+import { Plus, ShoppingBag, Eye, Printer, RotateCcw, Edit, Filter } from 'lucide-react';
 import type { Purchase } from './types';
 import './PurchasesPage.css';
 
@@ -16,6 +17,52 @@ export const PurchasesPage: React.FC = () => {
 
     const [viewingPurchase, setViewingPurchase] = useState<Purchase | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
+
+    // Filters State
+    const [showFilters, setShowFilters] = useState(() => {
+        const stored = localStorage.getItem('purchases_show_filters');
+        return stored !== null ? JSON.parse(stored) : true;
+    });
+    const [filterId, setFilterId] = useState('');
+    const [filterDate, setFilterDate] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filterStore, setFilterStore] = useState('');
+    const [filterSupplier, setFilterSupplier] = useState('');
+
+    useEffect(() => {
+        localStorage.setItem('purchases_show_filters', JSON.stringify(showFilters));
+    }, [showFilters]);
+
+    // Derived options for selects
+    const uniqueStores = useMemo(() => Array.from(new Set(purchases.map(p => p.storeName))), [purchases]);
+    const uniqueSuppliers = useMemo(() => Array.from(new Set(purchases.map(p => p.supplierName))).sort(), [purchases]);
+
+    // Filtered Purchases
+    const filteredPurchases = useMemo(() => {
+        return purchases.filter(purchase => {
+            const matchId = purchase.id.toLowerCase().includes(filterId.toLowerCase());
+            
+            let matchDate = true;
+            if (filterDate) {
+                const purchaseDate = new Date(purchase.date).toISOString().split('T')[0];
+                matchDate = purchaseDate === filterDate;
+            }
+
+            const matchStatus = filterStatus ? purchase.status === filterStatus : true;
+            const matchStore = filterStore ? purchase.storeName === filterStore : true;
+            const matchSupplier = filterSupplier ? purchase.supplierName === filterSupplier : true;
+
+            return matchId && matchDate && matchStatus && matchStore && matchSupplier;
+        });
+    }, [purchases, filterId, filterDate, filterStatus, filterStore, filterSupplier]);
+
+    const clearFilters = () => {
+        setFilterId('');
+        setFilterDate('');
+        setFilterStatus('');
+        setFilterStore('');
+        setFilterSupplier('');
+    };
 
     // Persistence Effect
     React.useEffect(() => {
@@ -71,10 +118,80 @@ export const PurchasesPage: React.FC = () => {
                     </h1>
                     <p className="purchases-subtitle">Gestiona el abastecimiento de tus tiendas.</p>
                 </div>
-                <Button onClick={() => navigate('/purchases/new')} icon={<Plus size={20} />}>
-                    Nueva Compra
-                </Button>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setShowFilters(!showFilters)} 
+                        icon={<Filter size={16} />}
+                        style={{ marginRight: '2rem' }}
+                    >
+                        {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                    </Button>
+                    <Button onClick={() => navigate('/purchases/new')} icon={<Plus size={20} />}>
+                        Nueva Compra
+                    </Button>
+                </div>
             </div>
+
+            {showFilters && (
+                <div className="purchases-filters-container">
+                    <div className="purchases-filters-grid">
+                        <div className="filter-group">
+                            <label>ID</label>
+                            <Input 
+                                placeholder="Buscar ID..." 
+                                value={filterId} 
+                                onChange={e => setFilterId(e.target.value)} 
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label>Fecha</label>
+                            <Input 
+                                type="date" 
+                                value={filterDate} 
+                                onChange={e => setFilterDate(e.target.value)} 
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label>Estado</label>
+                            <select 
+                                className="filter-select"
+                                value={filterStatus}
+                                onChange={e => setFilterStatus(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                <option value="completed">Completado</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label>Tienda Destino</label>
+                            <select 
+                                className="filter-select"
+                                value={filterStore}
+                                onChange={e => setFilterStore(e.target.value)}
+                            >
+                                <option value="">Todas</option>
+                                {uniqueStores.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label>Proveedor</label>
+                            <select 
+                                className="filter-select"
+                                value={filterSupplier}
+                                onChange={e => setFilterSupplier(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {uniqueSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-group filter-actions">
+                            <Button variant="outline" onClick={clearFilters}>Limpiar</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="purchases-table-container">
                 <div className="purchases-table-wrapper">
@@ -96,8 +213,14 @@ export const PurchasesPage: React.FC = () => {
                                         No hay compras registradas.
                                     </td>
                                 </tr>
+                            ) : filteredPurchases.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                        No se encontraron compras que coincidan con los filtros.
+                                    </td>
+                                </tr>
                             ) : (
-                                purchases.map((purchase) => (
+                                filteredPurchases.map((purchase) => (
                                     <tr
                                         key={purchase.id}
                                         onClick={() => {

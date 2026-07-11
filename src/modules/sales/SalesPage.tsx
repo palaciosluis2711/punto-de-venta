@@ -1,14 +1,64 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useSales } from './hooks/useSales';
 import { Button } from '../../shared/components/Button';
+import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
-import { Eye, Printer, CreditCard } from 'lucide-react';
+import { Eye, Printer, CreditCard, Ticket, Filter } from 'lucide-react';
 import type { Sale } from './types';
+import { PostSaleView } from '../pos/components/PostSaleView';
 import './SalesPage.css';
 
 export const SalesPage: React.FC = () => {
     const { sales } = useSales();
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
+    const [ticketViewSale, setTicketViewSale] = useState<Sale | null>(null);
+    const [showFilters, setShowFilters] = useState(() => {
+        const stored = localStorage.getItem('sales_show_filters');
+        return stored !== null ? JSON.parse(stored) : true;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('sales_show_filters', JSON.stringify(showFilters));
+    }, [showFilters]);
+
+    // Filters State
+    const [filterId, setFilterId] = useState('');
+    const [filterClient, setFilterClient] = useState('');
+    const [filterDate, setFilterDate] = useState('');
+    const [filterStore, setFilterStore] = useState('');
+    const [filterPayment, setFilterPayment] = useState('');
+
+    // Derived options for selects
+    const uniqueStores = useMemo(() => Array.from(new Set(sales.map(s => s.storeName))), [sales]);
+    const uniquePayments = useMemo(() => Array.from(new Set(sales.map(s => s.paymentMethod))), [sales]);
+    const uniqueClients = useMemo(() => Array.from(new Set(sales.map(s => s.clientName))).sort(), [sales]);
+
+    // Filtered Sales
+    const filteredSales = useMemo(() => {
+        return sales.filter(sale => {
+            const matchId = sale.id.toLowerCase().includes(filterId.toLowerCase());
+            const matchClient = filterClient ? sale.clientName === filterClient : true;
+            
+            let matchDate = true;
+            if (filterDate) {
+                const saleDate = new Date(sale.date).toISOString().split('T')[0];
+                matchDate = saleDate === filterDate;
+            }
+
+            const matchStore = filterStore ? sale.storeName === filterStore : true;
+            const matchPayment = filterPayment ? sale.paymentMethod === filterPayment : true;
+
+            return matchId && matchClient && matchDate && matchStore && matchPayment;
+        });
+    }, [sales, filterId, filterClient, filterDate, filterStore, filterPayment]);
+
+    const clearFilters = () => {
+        setFilterId('');
+        setFilterClient('');
+        setFilterDate('');
+        setFilterStore('');
+        setFilterPayment('');
+    };
 
     // Ref for printing content
     const printRef = useRef<HTMLDivElement>(null);
@@ -28,7 +78,81 @@ export const SalesPage: React.FC = () => {
                     </h1>
                     <p className="sales-subtitle">Historial de todas las ventas procesadas en el POS.</p>
                 </div>
+                <div>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setShowFilters(!showFilters)} 
+                        icon={<Filter size={16} />}
+                    >
+                        {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                    </Button>
+                </div>
             </div>
+
+            {showFilters && (
+                <div className="sales-filters-container">
+                <div className="sales-filters-grid">
+                    <div className="filter-group">
+                        <label>ID del Recibo</label>
+                        <Input 
+                            placeholder="Buscar por ID..." 
+                            value={filterId} 
+                            onChange={e => setFilterId(e.target.value)} 
+                        />
+                    </div>
+                    <div className="filter-group">
+                        <label>Cliente</label>
+                        <select 
+                            className="filter-select"
+                            value={filterClient}
+                            onChange={e => setFilterClient(e.target.value)}
+                        >
+                            <option value="">Todos los clientes</option>
+                            {uniqueClients.map(client => (
+                                <option key={client} value={client}>{client}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="filter-group">
+                        <label>Fecha</label>
+                        <Input 
+                            type="date" 
+                            value={filterDate} 
+                            onChange={e => setFilterDate(e.target.value)} 
+                        />
+                    </div>
+                    <div className="filter-group">
+                        <label>Tienda</label>
+                        <select 
+                            className="filter-select"
+                            value={filterStore}
+                            onChange={e => setFilterStore(e.target.value)}
+                        >
+                            <option value="">Todas las tiendas</option>
+                            {uniqueStores.map(store => (
+                                <option key={store} value={store}>{store}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="filter-group">
+                        <label>Método de Pago</label>
+                        <select 
+                            className="filter-select"
+                            value={filterPayment}
+                            onChange={e => setFilterPayment(e.target.value)}
+                        >
+                            <option value="">Todos los métodos</option>
+                            {uniquePayments.map(payment => (
+                                <option key={payment} value={payment}>{payment}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="filter-group filter-actions">
+                        <Button variant="outline" onClick={clearFilters}>Limpiar</Button>
+                    </div>
+                </div>
+            </div>
+            )}
 
             <div className="sales-table-container">
                 <div className="sales-table-wrapper">
@@ -50,8 +174,14 @@ export const SalesPage: React.FC = () => {
                                         No hay ventas registradas.
                                     </td>
                                 </tr>
+                            ) : filteredSales.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                        No se encontraron ventas que coincidan con los filtros.
+                                    </td>
+                                </tr>
                             ) : (
-                                sales.map((sale) => (
+                                filteredSales.map((sale) => (
                                     <tr
                                         key={sale.id}
                                         onClick={() => setViewingSale(sale)}
@@ -223,6 +353,9 @@ export const SalesPage: React.FC = () => {
 
                         {/* Modal Actions (Not Printed) */}
                         <div className="modal-actions flex justify-end items-center pt-4 border-t border-border no-print" style={{ gap: '1rem' }}>
+                            <Button variant="outline" onClick={() => setTicketViewSale(viewingSale)} icon={<Ticket size={16} />}>
+                                Ticket
+                            </Button>
                             <Button variant="outline" onClick={handlePrint} icon={<Printer size={16} />}>
                                 Imprimir
                             </Button>
@@ -233,6 +366,14 @@ export const SalesPage: React.FC = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Reprint Ticket Modal */}
+            <PostSaleView 
+                isOpen={!!ticketViewSale} 
+                onClose={() => setTicketViewSale(null)} 
+                sale={ticketViewSale} 
+                isHistoryView={true} 
+            />
         </div>
     );
 };

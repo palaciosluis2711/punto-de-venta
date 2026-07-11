@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTransfers } from './hooks/useTransfers';
 import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
+import { Input } from '../../shared/components/Input';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
-import { Plus, ArrowRightLeft, Eye, Printer, RotateCcw, Edit } from 'lucide-react';
+import { Plus, ArrowRightLeft, Eye, Printer, RotateCcw, Edit, Filter } from 'lucide-react';
 import type { Transfer } from './types';
 import './TransfersPage.css';
 
@@ -16,6 +17,52 @@ export const TransfersPage: React.FC = () => {
 
     const [viewingTransfer, setViewingTransfer] = useState<Transfer | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
+
+    // Filters State
+    const [showFilters, setShowFilters] = useState(() => {
+        const stored = localStorage.getItem('transfers_show_filters');
+        return stored !== null ? JSON.parse(stored) : true;
+    });
+    const [filterId, setFilterId] = useState('');
+    const [filterDate, setFilterDate] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filterSource, setFilterSource] = useState('');
+    const [filterDestination, setFilterDestination] = useState('');
+
+    useEffect(() => {
+        localStorage.setItem('transfers_show_filters', JSON.stringify(showFilters));
+    }, [showFilters]);
+
+    // Derived options for selects
+    const uniqueSources = useMemo(() => Array.from(new Set(transfers.map(t => t.sourceStoreName))), [transfers]);
+    const uniqueDestinations = useMemo(() => Array.from(new Set(transfers.map(t => t.destinationStoreName))), [transfers]);
+
+    // Filtered Transfers
+    const filteredTransfers = useMemo(() => {
+        return transfers.filter(transfer => {
+            const matchId = transfer.id.toLowerCase().includes(filterId.toLowerCase());
+            
+            let matchDate = true;
+            if (filterDate) {
+                const transferDate = new Date(transfer.date).toISOString().split('T')[0];
+                matchDate = transferDate === filterDate;
+            }
+
+            const matchStatus = filterStatus ? transfer.status === filterStatus : true;
+            const matchSource = filterSource ? transfer.sourceStoreName === filterSource : true;
+            const matchDest = filterDestination ? transfer.destinationStoreName === filterDestination : true;
+
+            return matchId && matchDate && matchStatus && matchSource && matchDest;
+        });
+    }, [transfers, filterId, filterDate, filterStatus, filterSource, filterDestination]);
+
+    const clearFilters = () => {
+        setFilterId('');
+        setFilterDate('');
+        setFilterStatus('');
+        setFilterSource('');
+        setFilterDestination('');
+    };
 
     // Persistence Effect
     React.useEffect(() => {
@@ -93,10 +140,80 @@ export const TransfersPage: React.FC = () => {
                     </h1>
                     <p className="transfers-subtitle">Gestiona el movimiento de inventario entre tiendas.</p>
                 </div>
-                <Button onClick={() => navigate('/transfers/new')} icon={<Plus size={20} />}>
-                    Nueva Transferencia
-                </Button>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setShowFilters(!showFilters)} 
+                        icon={<Filter size={16} />}
+                        style={{ marginRight: '2rem' }}
+                    >
+                        {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                    </Button>
+                    <Button onClick={() => navigate('/transfers/new')} icon={<Plus size={20} />}>
+                        Nueva Transferencia
+                    </Button>
+                </div>
             </div>
+
+            {showFilters && (
+                <div className="transfers-filters-container">
+                    <div className="transfers-filters-grid">
+                        <div className="filter-group">
+                            <label>ID</label>
+                            <Input 
+                                placeholder="Buscar ID..." 
+                                value={filterId} 
+                                onChange={e => setFilterId(e.target.value)} 
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label>Fecha</label>
+                            <Input 
+                                type="date" 
+                                value={filterDate} 
+                                onChange={e => setFilterDate(e.target.value)} 
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label>Estado</label>
+                            <select 
+                                className="filter-select"
+                                value={filterStatus}
+                                onChange={e => setFilterStatus(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                <option value="completed">Completado</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label>Origen</label>
+                            <select 
+                                className="filter-select"
+                                value={filterSource}
+                                onChange={e => setFilterSource(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {uniqueSources.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label>Destino</label>
+                            <select 
+                                className="filter-select"
+                                value={filterDestination}
+                                onChange={e => setFilterDestination(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {uniqueDestinations.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-group filter-actions">
+                            <Button variant="outline" onClick={clearFilters}>Limpiar</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="transfers-table-container">
                 <div className="transfers-table-wrapper">
@@ -118,8 +235,14 @@ export const TransfersPage: React.FC = () => {
                                         No hay transferencias registradas.
                                     </td>
                                 </tr>
+                            ) : filteredTransfers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                        No se encontraron transferencias que coincidan con los filtros.
+                                    </td>
+                                </tr>
                             ) : (
-                                transfers.map((transfer) => (
+                                filteredTransfers.map((transfer) => (
                                     <tr
                                         key={transfer.id}
                                         onClick={() => {

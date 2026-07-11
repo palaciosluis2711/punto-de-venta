@@ -1,7 +1,123 @@
-.post-sale-new-sale-container {
+.post-sale-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.75); /* Dark overlay matching the rest of the app */
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.post-sale-container {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.post-sale-header {
+    padding: 2rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-hover);
+}
+
+.success-icon-wrapper {
+    background: rgba(16, 185, 129, 0.15); /* var(--success) with opacity */
+    color: var(--success);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.success-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+}
+
+.success-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.ticket-preview-box {
+    padding: 1.5rem;
+    background: #f1f5f9; /* Slate 100 - slight contrast for the ticket */
+    max-height: 45vh;
+    overflow-y: auto;
     display: flex;
     justify-content: center;
-    align-items: center;
-    width: 100%;
-    margin-top: 0.5rem;
+    align-items: flex-start; /* Fixes clipping of tall flex children */
+}
+
+/* Make sure the receipt inside looks like paper */
+.ticket-preview-box .receipt-preview-container {
+    background: white;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin: 0 auto;
+    height: fit-content;
+    min-height: fit-content;
+}
+
+.post-sale-actions {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.post-sale-actions .btn-print {
+    flex: 1;
+    height: 3rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.post-sale-actions .btn-print:hover {
+    background: var(--surface-hover);
+    border-color: var(--text-muted);
+}
+
+.post-sale-actions .btn-new-sale {
+    flex: 1;
+    height: 3rem;
+    font-weight: 600;
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.post-sale-actions .btn-new-sale:hover {
+    background: #059669; /* Darker success */
+    border-color: #059669;
 }
