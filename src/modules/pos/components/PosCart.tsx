@@ -141,7 +141,13 @@ export const PosCart: React.FC<PosCartProps> = ({
                         key={item.id}
                         className="cart-item"
                     >
-                        <div className="cart-item-info">
+                        <div 
+                            className="cart-item-info"
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                handleNameClick(item, e);
+                            }}
+                        >
                             <div>
                                 <div
                                     className="cart-item-name hover:text-primary transition-colors"
@@ -329,7 +335,14 @@ export const PosCart: React.FC<PosCartProps> = ({
                                                 }
                                             }
                                         }}
-                                    // ... other input logical props identical to before ...
+                                        onBlur={(e) => {
+                                            if (activeItem) {
+                                                const val = parseFloat(e.currentTarget.value);
+                                                if (!isNaN(val) && val >= 0) {
+                                                    onUpdateItem(activeItem.id, { discount: { type: 'amount', value: val } });
+                                                }
+                                            }
+                                        }}
                                     />
                                     {activeItem.discount?.type === 'amount' && (
                                         <button
@@ -401,6 +414,12 @@ export const PosCart: React.FC<PosCartProps> = ({
                                                                 }
                                                                 if (e.key === 'Escape') setCustomDiscountMode('select');
                                                             }}
+                                                            onBlur={(e) => {
+                                                                if (activeItem) {
+                                                                    const val = parseInt(e.currentTarget.value);
+                                                                    if (val > 0) { onUpdateItem(activeItem.id, { discount: { type: 'percent', value: Math.min(100, val) } }); setShowCustomDiscount(false); }
+                                                                }
+                                                            }}
                                                         /><span className="discount-input-icon icon-right">%</span>
                                                     </div>
                                                 </div>
@@ -420,6 +439,12 @@ export const PosCart: React.FC<PosCartProps> = ({
                                                                     if (val > 0) { onUpdateItem(activeItem.id, { discount: { type: 'amount', value: val } }); setShowCustomDiscount(false); }
                                                                 }
                                                                 if (e.key === 'Escape') setCustomDiscountMode('select');
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                if (activeItem) {
+                                                                    const val = parseFloat(e.currentTarget.value);
+                                                                    if (val > 0) { onUpdateItem(activeItem.id, { discount: { type: 'amount', value: val } }); setShowCustomDiscount(false); }
+                                                                }
                                                             }}
                                                         />
                                                     </div>

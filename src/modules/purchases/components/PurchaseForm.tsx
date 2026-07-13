@@ -17,7 +17,8 @@ interface PurchaseFormProps {
 }
 
 export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, isProcessing, initialData }) => {
-    const { stores } = useStores();
+    const { stores, activeStoreId } = useStores();
+    const isMainStore = stores.find(s => s.id === activeStoreId)?.isDefault;
     const { suppliers } = useSuppliers();
     const { products } = useInventory(); // Get products directly
 
@@ -25,9 +26,9 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
         if (initialData) return initialData.storeId;
         const saved = localStorage.getItem('app_purchase_form_state');
         if (saved) {
-            try { return JSON.parse(saved).storeId || ''; } catch { }
+            try { return JSON.parse(saved).storeId || activeStoreId || ''; } catch { }
         }
-        return '';
+        return activeStoreId || '';
     });
 
     const [supplierId, setSupplierId] = useState(() => {
@@ -66,6 +67,13 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
             setItems(initialData.items);
         }
     }, [initialData]);
+
+    // Enforce store restriction dynamically
+    useEffect(() => {
+        if (!isMainStore && storeId !== activeStoreId) {
+            setStoreId(activeStoreId);
+        }
+    }, [isMainStore, activeStoreId, storeId]);
 
     // Persist state to localStorage
     useEffect(() => {
@@ -361,7 +369,13 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                             >
                                 <option value="">Seleccionar...</option>
                                 {stores.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                    <option 
+                                        key={s.id} 
+                                        value={s.id}
+                                        disabled={!isMainStore && s.id !== activeStoreId}
+                                    >
+                                        {s.name} {!isMainStore && s.id !== activeStoreId ? '(Solo Principal)' : ''}
+                                    </option>
                                 ))}
                             </select>
                         </div>

@@ -196,6 +196,12 @@
     box-shadow: var(--shadow-sm);
 }
 
+.nav-item.has-unread.active {
+    background-color: rgba(239, 68, 68, 0.1); /* Soft red */
+    color: var(--error);
+    box-shadow: none;
+}
+
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid var(--border);

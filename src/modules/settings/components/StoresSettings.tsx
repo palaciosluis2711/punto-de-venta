@@ -53,6 +53,7 @@ export const StoresSettings: React.FC = () => {
                 isDefault: editingStore.isDefault
             });
             setEditingStore(null);
+            localStorage.removeItem('app_settings_stores_edit_id');
         }
     };
 

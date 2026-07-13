@@ -15,8 +15,11 @@ import type { Product } from '../inventory/types';
 import type { Client } from '../clients/types';
 import { PosFinalizeSaleModal, type FinalizeSaleData } from './components/PosFinalizeSaleModal';
 import { PostSaleView } from './components/PostSaleView';
+import { PosStockWarningModal, type MissingStockItem, type MissingItemResolution } from './components/PosStockWarningModal';
 import { useSales } from '../sales/hooks/useSales';
 import { useStores } from '../settings/hooks/useStores';
+import { useTransfers } from '../transfers/hooks/useTransfers';
+import { useNotifications } from '../notifications/hooks/useNotifications';
 import type { Sale } from '../sales/types';
 import './PosPage.css';
 
@@ -39,6 +42,8 @@ export const PosPage: React.FC = () => {
     const { clients, searchClients, addClient, updateClient } = useClients();
     const { addSale } = useSales();
     const { stores } = useStores();
+    const { addTransfer } = useTransfers();
+    const { addNotification } = useNotifications();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -50,6 +55,10 @@ export const PosPage: React.FC = () => {
 
     // Finalize Sale Modal State
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+
+    // Stock Warning Modal State
+    const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+    const [missingItems, setMissingItems] = useState<MissingStockItem[]>([]);
 
     // Post Sale Modal State
     const [lastCompletedSale, setLastCompletedSale] = useState<Sale | null>(() => {
@@ -256,6 +265,103 @@ export const PosPage: React.FC = () => {
             setSelectedClient(defaultClient);
         }
 
+        // Check for missing stock
+        const missing: MissingStockItem[] = [];
+        cart.forEach(item => {
+            const product = products.find(p => p.id === item.id);
+            if (product) {
+                const localStock = product.inventory?.[activeStoreId] || 0;
+                if (item.quantity > localStock) {
+                    missing.push({
+                        product,
+                        cartQuantity: item.quantity,
+                        localStock,
+                        missingQuantity: item.quantity - localStock
+                    });
+                }
+            }
+        });
+
+        if (missing.length > 0) {
+            setMissingItems(missing);
+            setIsWarningModalOpen(true);
+        } else {
+            setIsFinalizeModalOpen(true);
+        }
+    };
+
+    const handleProceedWithTransfers = (resolutions: MissingItemResolution[]) => {
+        setIsWarningModalOpen(false);
+
+        // Process transfers
+        const activeStoreName = stores.find(s => s.id === activeStoreId)?.name || 'Tienda Actual';
+
+        // Group resolutions by source store
+        const groupedBySource = resolutions.reduce((acc, res) => {
+            if (!acc[res.sourceStoreId]) acc[res.sourceStoreId] = [];
+            acc[res.sourceStoreId].push(res);
+            return acc;
+        }, {} as Record<string, MissingItemResolution[]>);
+
+        const inventoryMovements: { productId: string; storeId: string; quantity: number }[] = [];
+
+        Object.entries(groupedBySource).forEach(([sourceStoreId, items]) => {
+            const sourceStoreName = stores.find(s => s.id === sourceStoreId)?.name || 'Tienda Origen';
+            
+            const transferItems = items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.missingQuantity,
+                unitCost: item.unitPrice,
+                subtotal: item.missingQuantity * item.unitPrice
+            }));
+
+            // Create transfer record
+            addTransfer({
+                date: new Date().toISOString(),
+                sourceStoreId,
+                sourceStoreName,
+                destinationStoreId: activeStoreId,
+                destinationStoreName: activeStoreName,
+                items: transferItems,
+                totalValue: transferItems.reduce((sum, i) => sum + i.subtotal, 0),
+                status: 'completed',
+                notes: 'Transferencia automática por falta de stock en POS.'
+            });
+
+            // Prepare inventory movements
+            items.forEach(item => {
+                // Deduct from source store
+                inventoryMovements.push({
+                    productId: item.productId,
+                    storeId: sourceStoreId,
+                    quantity: -item.missingQuantity
+                });
+                // Add to active store (so the sale can deduct it normally)
+                inventoryMovements.push({
+                    productId: item.productId,
+                    storeId: activeStoreId,
+                    quantity: item.missingQuantity
+                });
+            });
+
+            // Send notification
+            const transferredList = items.map(i => `- ${i.productName} (Cant: ${i.missingQuantity})`).join('\n');
+            addNotification({
+                title: 'Transferencia Automática de Stock',
+                message: `La tienda ${activeStoreName} vendió productos que no estaban disponibles en su stock, por lo que han pedido transferirlos desde esta tienda para completar la venta.\n\nLos productos transferidos fueron:\n${transferredList}`,
+                sourceStoreId: activeStoreId,
+                targetStoreId: sourceStoreId,
+                priority: 'normal',
+                type: 'transfer'
+            });
+        });
+
+        if (inventoryMovements.length > 0) {
+            updateStockBulk(inventoryMovements);
+        }
+
+        // Open checkout modal
         setIsFinalizeModalOpen(true);
     };
 
@@ -450,6 +556,15 @@ export const PosPage: React.FC = () => {
             </Modal>
 
             {/* Finalize Sale Modal */}
+            <PosStockWarningModal
+                isOpen={isWarningModalOpen}
+                missingItems={missingItems}
+                stores={stores}
+                activeStoreId={activeStoreId}
+                onCancel={() => setIsWarningModalOpen(false)}
+                onProceed={handleProceedWithTransfers}
+            />
+
             <PosFinalizeSaleModal
                 isOpen={isFinalizeModalOpen}
                 onClose={() => setIsFinalizeModalOpen(false)}

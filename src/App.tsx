@@ -13,6 +13,7 @@ import { TransferCreatePage } from './modules/transfers/TransferCreatePage';
 import { TransferEditPage } from './modules/transfers/TransferEditPage';
 import { ClientsPage } from './modules/clients/ClientsPage';
 import { SalesPage } from './modules/sales/SalesPage';
+import { NotificationsPage } from './modules/notifications/NotificationsPage';
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
       { path: "transfers/new", element: <TransferCreatePage /> },
       { path: "transfers/edit/:id", element: <TransferEditPage /> },
       { path: "sales", element: <SalesPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
       { path: "*", element: <Navigate to="/" replace /> }
     ]
   }

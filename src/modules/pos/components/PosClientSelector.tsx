@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, X, Plus, Edit, UserPlus } from 'lucide-react';
+import { Search, User, X, Plus, Edit, UserPlus, ChevronDown } from 'lucide-react';
 import type { Client } from '../../clients/types';
 import { Button } from '../../../shared/components/Button';
 
@@ -25,13 +25,8 @@ export const PosClientSelector: React.FC<PosClientSelectorProps> = ({
 
     // Debounce search
     useEffect(() => {
-        if (!query.trim()) {
-            setResults([]);
-            return;
-        }
-
         const timer = setTimeout(() => {
-            setResults(searchClients(query));
+            setResults(searchClients(query.trim()));
         }, 300);
 
         return () => clearTimeout(timer);
@@ -155,27 +150,40 @@ export const PosClientSelector: React.FC<PosClientSelectorProps> = ({
                         <X size={16} />
                     </button>
                 ) : (
-                    <button
-                        style={{
-                            position: 'absolute',
-                            right: '0.5rem',
-                            top: '0.375rem',
-                            padding: '0.25rem',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            color: 'var(--primary)',
-                            borderRadius: '4px'
-                        }}
-                        onClick={onAdd}
-                        title="Nuevo Cliente"
-                    >
-                        <UserPlus size={18} />
-                    </button>
+                    <div style={{ position: 'absolute', right: '0.5rem', top: '0.375rem', display: 'flex', gap: '0.25rem' }}>
+                        <button
+                            style={{
+                                padding: '0.25rem',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                color: 'var(--muted-foreground)',
+                                borderRadius: '4px'
+                            }}
+                            onClick={() => setIsOpen(!isOpen)}
+                            title="Mostrar clientes"
+                        >
+                            <ChevronDown size={18} />
+                        </button>
+                        <button
+                            style={{
+                                padding: '0.25rem',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                color: 'var(--primary)',
+                                borderRadius: '4px'
+                            }}
+                            onClick={onAdd}
+                            title="Nuevo Cliente"
+                        >
+                            <UserPlus size={18} />
+                        </button>
+                    </div>
                 )}
             </div>
 
-            {isOpen && query && (
+            {isOpen && (
                 <div style={{
                     position: 'absolute',
                     top: '100%',

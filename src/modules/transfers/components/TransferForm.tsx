@@ -17,6 +17,7 @@ interface TransferFormProps {
 
 export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, isProcessing, initialData }) => {
     const { stores, activeStoreId } = useStores();
+    const isMainStore = stores.find(s => s.id === activeStoreId)?.isDefault;
     const { products } = useInventory();
 
     const [sourceStoreId, setSourceStoreId] = useState(() => {
@@ -65,6 +66,20 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
             setItems(initialData.items);
         }
     }, [initialData]);
+
+    // Enforce store restriction dynamically
+    useEffect(() => {
+        if (!isMainStore && sourceStoreId !== activeStoreId) {
+            setSourceStoreId(activeStoreId);
+        }
+    }, [isMainStore, activeStoreId, sourceStoreId]);
+
+    // Prevent origin and destination from being the same
+    useEffect(() => {
+        if (sourceStoreId && destinationStoreId && sourceStoreId === destinationStoreId) {
+            setDestinationStoreId('');
+        }
+    }, [sourceStoreId, destinationStoreId]);
 
     // Persist state
     useEffect(() => {
@@ -359,14 +374,21 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                             <label className="sidebar-label">Tienda Origen</label>
                             <select
                                 value={sourceStoreId}
-                                onChange={e => setSourceStoreId(e.target.value)}
+                                onChange={e => {
+                                    setSourceStoreId(e.target.value);
+                                    setDestinationStoreId('');
+                                }}
                                 className="input-field"
                                 required
                             >
                                 <option value="">Seleccionar Origen...</option>
                                 {stores.map(s => (
-                                    <option key={s.id} value={s.id} disabled={s.id === destinationStoreId}>
-                                        {s.name}
+                                    <option 
+                                        key={s.id} 
+                                        value={s.id} 
+                                        disabled={!isMainStore && s.id !== activeStoreId}
+                                    >
+                                        {s.name} {!isMainStore && s.id !== activeStoreId ? '(Solo Principal)' : ''}
                                     </option>
                                 ))}
                             </select>
@@ -383,8 +405,11 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                 onChange={e => setDestinationStoreId(e.target.value)}
                                 className="input-field"
                                 required
+                                disabled={!sourceStoreId}
                             >
-                                <option value="">Seleccionar Destino...</option>
+                                <option value="">
+                                    {!sourceStoreId ? 'Elige Origen primero' : 'Seleccionar Destino...'}
+                                </option>
                                 {stores.filter(s => s.id !== sourceStoreId).map(s => (
                                     <option key={s.id} value={s.id}>
                                         {s.name}

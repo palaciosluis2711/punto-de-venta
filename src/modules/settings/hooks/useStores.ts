@@ -24,8 +24,12 @@ export const useStores = () => {
             const stored = localStorage.getItem(STORAGE_KEY);
             let loadedStores: Store[] = [];
             if (stored) {
-                loadedStores = JSON.parse(stored);
-                setStores(loadedStores);
+                try {
+                    loadedStores = JSON.parse(stored);
+                    setStores(loadedStores);
+                } catch {
+                    loadedStores = DEFAULT_STORES;
+                }
             } else {
                 loadedStores = DEFAULT_STORES;
                 setStores(DEFAULT_STORES);
@@ -51,17 +55,28 @@ export const useStores = () => {
 
             setLoading(false);
         };
+        
         loadStores();
+        
+        window.addEventListener('storage', loadStores);
+        window.addEventListener('stores_updated', loadStores);
+
+        return () => {
+            window.removeEventListener('storage', loadStores);
+            window.removeEventListener('stores_updated', loadStores);
+        };
     }, []);
 
     const saveStores = (newStores: Store[]) => {
         setStores(newStores);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newStores));
+        window.dispatchEvent(new Event('stores_updated'));
     };
 
     const setActiveStore = (id: string) => {
         setActiveStoreId(id);
         localStorage.setItem('stationery_active_store', id);
+        window.dispatchEvent(new Event('stores_updated'));
     };
 
     const setMainStore = (id: string) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CategoriesSettings } from './components/CategoriesSettings';
 import { BrandsSettings } from './components/BrandsSettings';
 import { UnitsSettings } from './components/UnitsSettings';
@@ -12,7 +12,14 @@ import { TicketSettings } from './components/TicketSettings';
 type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes' | 'rules' | 'payment_methods' | 'ticket';
 
 export const SettingsPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<SettingsTab>('categories');
+    const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+        const saved = localStorage.getItem('app_settings_active_tab');
+        return (saved as SettingsTab) || 'categories';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('app_settings_active_tab', activeTab);
+    }, [activeTab]);
 
     return (
         <div className="animate-in flex gap-8" style={{ display: 'flex', gap: '2rem', height: '100%', flex: 1, overflow: 'hidden' }}>
