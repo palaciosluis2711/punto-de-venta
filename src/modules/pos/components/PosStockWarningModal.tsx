@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Store, Package } from 'lucide-react';
+import { Store, Package } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal';
 import { Button } from '../../../shared/components/Button';
 import type { Product } from '../../inventory/types';
-import type { Store as StoreType } from '../../settings/types';
+import type { Store as StoreType } from '../../settings/hooks/useStores';
 
 export interface MissingStockItem {
     product: Product;
@@ -44,12 +44,12 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
     useEffect(() => {
         if (isOpen && missingItems.length > 0) {
             const initialSelections: Record<string, string> = {};
-            
+
             missingItems.forEach(item => {
                 // Find all stores (except active) that have enough stock
-                const availableStores = stores.filter(s => 
-                    s.id !== activeStoreId && 
-                    item.product.inventory && 
+                const availableStores = stores.filter(s =>
+                    s.id !== activeStoreId &&
+                    item.product.inventory &&
                     (item.product.inventory[s.id] || 0) >= item.missingQuantity
                 );
 
@@ -58,9 +58,9 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                     initialSelections[item.product.id] = availableStores[0].id;
                 } else {
                     // If no store has enough, try to find ANY store with some stock, or just leave empty
-                    const anyStoresWithStock = stores.filter(s => 
-                        s.id !== activeStoreId && 
-                        item.product.inventory && 
+                    const anyStoresWithStock = stores.filter(s =>
+                        s.id !== activeStoreId &&
+                        item.product.inventory &&
                         (item.product.inventory[s.id] || 0) > 0
                     ).sort((a, b) => (item.product.inventory![b.id] || 0) - (item.product.inventory![a.id] || 0)); // Descending stock
 
@@ -71,6 +71,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                     }
                 }
             });
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelections(initialSelections);
         }
     }, [isOpen, missingItems, stores, activeStoreId]);
@@ -102,14 +103,14 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
         >
             <div style={{ padding: '1rem 0' }}>
                 <p style={{ marginBottom: '1.5rem', lineHeight: 1.5, color: 'var(--muted-foreground)' }}>
-                    Algunos productos agregados al carrito no están disponibles en esta tienda. 
+                    Algunos productos agregados al carrito no están disponibles en esta tienda.
                     Por favor, selecciona desde qué sucursal deseas transferir los productos faltantes.
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '50vh', overflowY: 'auto' }}>
                     {missingItems.map((item, index) => {
                         const availableStores = stores.filter(s => s.id !== activeStoreId);
-                        
+
                         return (
                             <div key={`${item.product.id}-${index}`} style={{
                                 padding: '1rem',
@@ -129,7 +130,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                 <div style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '1rem' }}>
                                     Stock local: {item.localStock} | Solicitado: {item.cartQuantity}
                                 </div>
-                                
+
                                 <div className="input-group">
                                     <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <Store size={14} /> Transferir desde:
