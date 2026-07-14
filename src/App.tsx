@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { ToastProvider } from './shared/components/Toast/ToastProvider';
 import { MainLayout } from './core/layout/MainLayout';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
 import { InventoryPage } from './modules/inventory/InventoryPage';
@@ -48,7 +49,11 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
+  );
 }
 
 export default App;

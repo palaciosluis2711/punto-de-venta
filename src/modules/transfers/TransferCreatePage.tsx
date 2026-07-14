@@ -5,6 +5,7 @@ import { useTransfers } from './hooks/useTransfers';
 import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '../../shared/components/Toast/useToast';
 
 
 export const TransferCreatePage: React.FC = () => {
@@ -12,6 +13,7 @@ export const TransferCreatePage: React.FC = () => {
     const { addTransfer } = useTransfers();
     // Destructure updateStockBulk
     const { updateStockBulk } = useInventory();
+    const { showToast } = useToast();
 
     const handleCreate = async (data: any) => {
         // 1. Update Inventory Stock (Atomic Bulk Update)
@@ -49,6 +51,7 @@ export const TransferCreatePage: React.FC = () => {
             status: 'completed'
         });
 
+        showToast('Transferencia creada exitosamente', 'success');
         navigate('/transfers');
     };
 

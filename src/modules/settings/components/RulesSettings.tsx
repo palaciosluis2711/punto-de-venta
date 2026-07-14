@@ -117,25 +117,33 @@ export const RulesSettings: React.FC = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Reglas de Precio</h2>
-                    <p className="text-muted">Crea reglas visuales para calcular precios automáticamente.</p>
+        <div className="settings-container animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="settings-header-section">
+                <div className="settings-header-title-bar">
+                    <div className="header-title-group">
+                        <div className="header-icon-box">
+                            <Plus size={24} />
+                        </div>
+                        <div>
+                            <h2 className="header-title">Reglas de Precio</h2>
+                            <p className="header-subtitle">Crea reglas visuales para calcular precios automáticamente.</p>
+                        </div>
+                    </div>
+                    <Button onClick={handleAddClick} icon={<Plus size={18} />}>
+                        Nueva Regla
+                    </Button>
                 </div>
-                <Button onClick={handleAddClick} icon={<Plus size={18} />}>
-                    Nueva Regla
-                </Button>
             </div>
 
-            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            <div className="settings-content-wrapper">
+                <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', width: '100%', alignItems: 'start' }}>
                 {rules.map(rule => (
                     <div key={rule.id} style={{
                         padding: '1rem',
                         backgroundColor: 'var(--surface)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-md)',
-                        // Flat design, no shadow
+                        height: 'fit-content'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                             <h3 style={{ fontWeight: 600, fontSize: '1rem', margin: 0 }}>{rule.name}</h3>
@@ -376,6 +384,7 @@ export const RulesSettings: React.FC = () => {
                 message="¿Estás seguro de que deseas eliminar esta regla? Esta acción no se puede deshacer."
                 confirmText="Sí, eliminar"
             />
+            </div>
         </div>
     );
 };

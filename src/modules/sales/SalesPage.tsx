@@ -3,13 +3,15 @@ import { useSales } from './hooks/useSales';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
-import { Eye, Printer, CreditCard, Ticket, Filter } from 'lucide-react';
+import { Eye, Printer, CreditCard, Ticket, Filter, Copy } from 'lucide-react';
 import type { Sale } from './types';
 import { PostSaleView } from '../pos/components/PostSaleView';
+import { useToast } from '../../shared/components/Toast/useToast';
 import './SalesPage.css';
 
 export const SalesPage: React.FC = () => {
     const { sales } = useSales();
+    const { showToast } = useToast();
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [ticketViewSale, setTicketViewSale] = useState<Sale | null>(null);
     const [showFilters, setShowFilters] = useState(() => {
@@ -236,7 +238,21 @@ export const SalesPage: React.FC = () => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="text-xl font-bold mb-1">Recibo de Venta</h3>
-                                        <p className="text-muted text-sm">ID: {viewingSale.id.slice(0, 8)}</p>
+                                        <p className="text-muted text-sm flex items-center gap-2">
+                                            ID: {viewingSale.id.slice(0, 8)}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                style={{ padding: '0.25rem', height: 'auto', color: 'var(--text-secondary)' }}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(viewingSale.id);
+                                                    showToast('Copiado al Portapapeles con éxito', 'success');
+                                                }}
+                                                title="Copiar ID"
+                                            >
+                                                <Copy size={14} />
+                                            </Button>
+                                        </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-medium">{new Date(viewingSale.date).toLocaleString()}</p>

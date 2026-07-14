@@ -36,7 +36,7 @@ export const PaymentMethodsSettings: React.FC = () => {
     };
 
     return (
-        <div className="settings-container">
+        <div className="settings-container animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="settings-header-section">
                 <div className="settings-header-title-bar">
                     <div className="header-title-group">

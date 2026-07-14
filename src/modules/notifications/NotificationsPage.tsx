@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
-import { Bell, BellRing, Check, Info, AlertTriangle, MessageSquare, Trash2, CheckCircle2, Clock, Store, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bell, BellRing, Check, Info, AlertTriangle, MessageSquare, Trash2, CheckCircle2, Clock, Store, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react';
 import { useNotifications } from './hooks/useNotifications';
 import { useStores } from '../settings/hooks/useStores';
+import { useTransfers } from '../transfers/hooks/useTransfers';
+import { useToast } from '../../shared/components/Toast/useToast';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { NotificationPriority } from './types';
 import './NotificationsPage.css';
 
 export const NotificationsPage: React.FC = () => {
     const { activeStoreId } = useOutletContext<{ activeStoreId: string }>();
+    const navigate = useNavigate();
     const { notifications, addNotification, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
     const { stores } = useStores();
+    const { transfers } = useTransfers();
 
     const [filterStatus, setFilterStatus] = useState<'all' | 'unread' | 'read'>('all');
     const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [viewingTransferId, setViewingTransferId] = useState<string | null>(null);
+    const { showToast } = useToast();
+
+    const viewingTransfer = transfers.find(t => t.id === viewingTransferId);
 
     // Form state for composing
     const [composeTitle, setComposeTitle] = useState('');
@@ -34,6 +42,16 @@ export const NotificationsPage: React.FC = () => {
         if (filterStatus === 'read') return n.status === 'read';
         return true;
     });
+
+    const handleCopy = (notification: any) => {
+        const text = `Título: ${notification.title}\nMensaje: ${notification.message}\nHora: ${new Date(notification.createdAt).toLocaleString()}\nOrigen: ${getStoreName(notification.sourceStoreId)}`;
+        navigator.clipboard.writeText(text);
+        showToast('Copiado al Portapapeles con éxito', 'success');
+    };
+
+    const handleViewTransfer = (transferId: string) => {
+        setViewingTransferId(transferId);
+    };
 
     const handleSendNotification = (e: React.FormEvent) => {
         e.preventDefault();
@@ -127,8 +145,26 @@ export const NotificationsPage: React.FC = () => {
                             <div className="notification-content">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <h3 className="notification-title">{notification.title}</h3>
-                                    <div style={{ color: 'var(--muted-foreground)' }}>
-                                        {expandedId === notification.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                    <div className="notification-actions-top" style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                        {notification.type === 'transfer' && notification.relatedEntityId && (
+                                            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewTransfer(notification.relatedEntityId!); }} title="Ver detalles de Transferencia" style={{ marginRight: '0.5rem' }}>
+                                                <ExternalLink size={14} style={{ marginRight: '0.25rem' }} /> Detalles
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleCopy(notification); }} title="Copiar notificación">
+                                            <Copy size={16} />
+                                        </Button>
+                                        {notification.status === 'unread' && (
+                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }} title="Marcar como leído">
+                                                <Check size={16} />
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="sm" className="text-danger hover:bg-danger/10" onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }} title="Eliminar">
+                                            <Trash2 size={16} />
+                                        </Button>
+                                        <div style={{ color: 'var(--muted-foreground)', marginLeft: '0.5rem', display: 'flex', alignItems: 'center' }}>
+                                            {expandedId === notification.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -157,17 +193,6 @@ export const NotificationsPage: React.FC = () => {
                                         De: {getStoreName(notification.sourceStoreId)}
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="notification-actions" style={{ marginLeft: '1rem' }}>
-                                {notification.status === 'unread' && (
-                                    <Button variant="ghost" size="sm" onClick={() => markAsRead(notification.id)}>
-                                        <Check size={16} />
-                                    </Button>
-                                )}
-                                <Button variant="ghost" size="sm" className="text-danger hover:bg-danger/10" onClick={() => deleteNotification(notification.id)}>
-                                    <Trash2 size={16} />
-                                </Button>
                             </div>
                         </div>
                     ))
@@ -237,6 +262,102 @@ export const NotificationsPage: React.FC = () => {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            <Modal
+                isOpen={!!viewingTransferId}
+                onClose={() => setViewingTransferId(null)}
+                title="Detalle de Transferencia"
+            >
+                {viewingTransfer && (
+                    <div className="transfer-details-content">
+                        <div className="details-header mb-6">
+                            <div className="flex justify-between items-start" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                <div>
+                                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 'bold' }}>Orden de Transferencia</h3>
+                                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem', margin: 0 }}>ID: {viewingTransfer.id.slice(0, 8)}</p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <p style={{ fontWeight: '500', margin: '0 0 0.25rem 0' }}>{new Date(viewingTransfer.date).toLocaleDateString()}</p>
+                                    <span style={{ 
+                                        padding: '0.25rem 0.5rem', 
+                                        borderRadius: '999px', 
+                                        fontSize: '0.75rem',
+                                        backgroundColor: viewingTransfer.status === 'completed' ? 'var(--success)' : 'var(--danger)',
+                                        color: '#fff'
+                                    }}>
+                                        {viewingTransfer.status === 'completed' ? 'Completado' : 'Cancelado'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Origen</p>
+                                    <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                        {viewingTransfer.sourceStoreName}
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Destino</p>
+                                    <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                        {viewingTransfer.destinationStoreName}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+                                <thead style={{ backgroundColor: 'var(--muted)' }}>
+                                    <tr>
+                                        <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Producto</th>
+                                        <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Cant.</th>
+                                        <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Valor U.</th>
+                                        <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {viewingTransfer.items.map((item, idx) => (
+                                        <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <td style={{ padding: '0.5rem' }}>{item.productName}</td>
+                                            <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.quantity}</td>
+                                            <td style={{ padding: '0.5rem', textAlign: 'right' }}>${item.unitCost.toFixed(2)}</td>
+                                            <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '500' }}>${item.subtotal.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot style={{ backgroundColor: 'var(--muted)', fontWeight: '500' }}>
+                                    <tr>
+                                        <td colSpan={3} style={{ padding: '0.5rem', textAlign: 'right' }}>Valor Total Transferido</td>
+                                        <td style={{ padding: '0.5rem', textAlign: 'right', fontSize: '1.125rem' }}>${viewingTransfer.totalValue.toFixed(2)}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        {viewingTransfer.notes && (
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '0.25rem' }}>Notas</p>
+                                <p style={{ fontSize: '0.875rem', fontStyle: 'italic', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                    {viewingTransfer.notes}
+                                </p>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                            <Button variant="outline" onClick={() => {
+                                localStorage.setItem('app_transfers_details_open', 'true');
+                                localStorage.setItem('app_transfers_view_id', viewingTransfer.id);
+                                navigate('/transfers');
+                            }}>
+                                Ir a Transferencias
+                            </Button>
+                            <Button onClick={() => setViewingTransferId(null)}>
+                                Cerrar
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

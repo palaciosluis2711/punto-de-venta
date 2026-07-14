@@ -6,10 +6,11 @@ import { StoresSettings } from './components/StoresSettings';
 import { TaxesSettings } from './components/TaxesSettings';
 import { RulesSettings } from './components/RulesSettings';
 import { PaymentMethodsSettings } from './components/PaymentMethodsSettings';
+import { ToastSettingsForm } from './components/ToastSettingsForm';
 
 import { TicketSettings } from './components/TicketSettings';
 
-type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes' | 'rules' | 'payment_methods' | 'ticket';
+type SettingsTab = 'categories' | 'brands' | 'units' | 'stores' | 'taxes' | 'rules' | 'payment_methods' | 'ticket' | 'toasts';
 
 export const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
@@ -161,6 +162,23 @@ export const SettingsPage: React.FC = () => {
                     >
                         Ticket / Impresión
                     </button>
+
+                    <button
+                        onClick={() => setActiveTab('toasts')}
+                        className={`text-left px-3 py-2 rounded-md font-medium transition-all ${activeTab === 'toasts' ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface-hover hover:text-main'}`}
+                        style={{
+                            textAlign: 'left',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: activeTab === 'toasts' ? 'var(--surface-hover)' : 'transparent',
+                            color: activeTab === 'toasts' ? 'var(--primary)' : 'var(--text-muted)',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Notificaciones Vis.
+                    </button>
                 </nav>
             </aside>
 
@@ -173,6 +191,7 @@ export const SettingsPage: React.FC = () => {
                 {activeTab === 'rules' && <RulesSettings />}
                 {activeTab === 'payment_methods' && <PaymentMethodsSettings />}
                 {activeTab === 'ticket' && <TicketSettings />}
+                {activeTab === 'toasts' && <ToastSettingsForm />}
             </main>
         </div>
     );

@@ -9,10 +9,12 @@ import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import type { Product } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 
 export const InventoryPage: React.FC = () => {
     const { products, addProduct, updateProduct, deleteProduct, deleteProductsBulk, searchProducts } = useInventory();
     const { stores } = useStores();
+    const { showToast } = useToast();
     const [copiedBarcode, setCopiedBarcode] = useState(false);
 
     const handleCopyBarcode = () => {
@@ -101,9 +103,11 @@ export const InventoryPage: React.FC = () => {
         if (confirmDialog.type === 'single' && confirmDialog.id) {
             deleteProduct(confirmDialog.id);
             setSelectedIds(prev => prev.filter(pid => pid !== confirmDialog.id));
+            showToast('Producto eliminado exitosamente', 'info');
         } else if (confirmDialog.type === 'bulk') {
             deleteProductsBulk(selectedIds);
             setSelectedIds([]);
+            showToast('Productos eliminados exitosamente', 'info');
         }
         setConfirmDialog({ isOpen: false, type: 'single' });
     };
@@ -111,8 +115,10 @@ export const InventoryPage: React.FC = () => {
     const handleFormSubmit = (data: Omit<Product, 'id'>) => {
         if (editingProduct) {
             updateProduct(editingProduct.id, data);
+            showToast('Producto guardado exitosamente', 'success');
         } else {
             addProduct(data);
+            showToast('Producto guardado exitosamente', 'success');
         }
         setIsModalOpen(false);
         localStorage.setItem('app_inventory_new_product_open', 'false');

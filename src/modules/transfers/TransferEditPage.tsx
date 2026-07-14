@@ -6,12 +6,14 @@ import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { ArrowLeft } from 'lucide-react';
 import type { Transfer } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 
 export const TransferEditPage: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { transfers, updateTransfer } = useTransfers();
     const { addStockToStore } = useInventory();
+    const { showToast } = useToast();
 
     const [originalTransfer, setOriginalTransfer] = useState<Transfer | null>(null);
 
@@ -54,6 +56,7 @@ export const TransferEditPage: React.FC = () => {
             status: 'completed'
         });
 
+        showToast('Transferencia modificada exitosamente', 'success');
         navigate('/transfers');
     };
 

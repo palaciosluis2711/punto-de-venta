@@ -24,13 +24,23 @@ export const TaxesSettings: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
-            <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>Impuestos</h2>
-                <p className="text-muted">Configura los impuestos aplicables a tus productos.</p>
+        <div className="settings-container animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="settings-header-section">
+                <div className="settings-header-title-bar">
+                    <div className="header-title-group">
+                        <div className="header-icon-box">
+                            <Percent size={24} />
+                        </div>
+                        <div>
+                            <h2 className="header-title">Impuestos</h2>
+                            <p className="header-subtitle">Configura los impuestos aplicables a tus productos.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div style={{ maxWidth: '600px' }}>
+            <div className="settings-content-wrapper">
+                <div className="settings-main-panel" style={{ maxWidth: '600px' }}>
                 <form onSubmit={handleSave} className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     <div className="input-wrapper">
                         <Input
@@ -60,6 +70,7 @@ export const TaxesSettings: React.FC = () => {
                         )}
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     );

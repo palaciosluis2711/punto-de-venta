@@ -6,14 +6,16 @@ import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
 import { Input } from '../../shared/components/Input';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
-import { Plus, ShoppingBag, Eye, Printer, RotateCcw, Edit, Filter } from 'lucide-react';
+import { Plus, ShoppingBag, Eye, Printer, RotateCcw, Edit, Filter, Copy } from 'lucide-react';
 import type { Purchase } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 import './PurchasesPage.css';
 
 export const PurchasesPage: React.FC = () => {
     const { purchases, updatePurchase } = usePurchases();
     const { addStockToStore } = useInventory();
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const [viewingPurchase, setViewingPurchase] = useState<Purchase | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
@@ -295,7 +297,21 @@ export const PurchasesPage: React.FC = () => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="text-xl font-bold mb-1">Orden de Compra</h3>
-                                        <p className="text-muted text-sm">ID: {viewingPurchase.id.slice(0, 8)}</p>
+                                        <p className="text-muted text-sm flex items-center gap-2">
+                                            ID: {viewingPurchase.id.slice(0, 8)}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                style={{ padding: '0.25rem', height: 'auto', color: 'var(--text-secondary)' }}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(viewingPurchase.id);
+                                                    showToast('Copiado al Portapapeles con éxito', 'success');
+                                                }}
+                                                title="Copiar ID"
+                                            >
+                                                <Copy size={14} />
+                                            </Button>
+                                        </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-medium">{new Date(viewingPurchase.date).toLocaleDateString()}</p>

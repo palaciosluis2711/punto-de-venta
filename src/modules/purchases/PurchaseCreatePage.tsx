@@ -5,12 +5,14 @@ import { useInventory } from '../inventory/hooks/useInventory';
 import { PurchaseForm } from './components/PurchaseForm';
 import { Button } from '../../shared/components/Button';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '../../shared/components/Toast/useToast';
 import './PurchasesPage.css'; // Reuse existing styles
 
 export const PurchaseCreatePage: React.FC = () => {
     const navigate = useNavigate();
     const { addPurchase } = usePurchases();
     const { updateStockBulk } = useInventory();
+    const { showToast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleCreatePurchase = async (data: any) => {
@@ -30,6 +32,7 @@ export const PurchaseCreatePage: React.FC = () => {
             }
 
             // Return to list view
+            showToast('Compra registrada exitosamente', 'success');
             navigate('/purchases');
         } catch (error) {
             console.error("Error creating purchase:", error);

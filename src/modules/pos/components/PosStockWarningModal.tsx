@@ -15,7 +15,8 @@ export interface MissingStockItem {
 export interface MissingItemResolution {
     productId: string;
     productName: string;
-    missingQuantity: number;
+    requestedQuantity: number;
+    transferredQuantity: number;
     sourceStoreId: string;
     unitPrice: number; // For transfer subtotal
 }
@@ -84,13 +85,24 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
     };
 
     const handleProceed = () => {
-        const resolutions: MissingItemResolution[] = missingItems.map(item => ({
-            productId: item.product.id,
-            productName: item.product.name,
-            missingQuantity: item.missingQuantity,
-            sourceStoreId: selections[item.product.id] || '',
-            unitPrice: item.product.cost || 0 // Transfers usually use cost or 0
-        })).filter(res => res.sourceStoreId !== ''); // Only proceed with items that have a source store selected
+        const resolutions: MissingItemResolution[] = missingItems.map(item => {
+            const sourceStoreId = selections[item.product.id] || '';
+            let transferredQuantity = item.missingQuantity;
+            
+            if (sourceStoreId) {
+                const sourceStock = item.product.inventory?.[sourceStoreId] || 0;
+                transferredQuantity = Math.min(item.missingQuantity, sourceStock);
+            }
+
+            return {
+                productId: item.product.id,
+                productName: item.product.name,
+                requestedQuantity: item.missingQuantity,
+                transferredQuantity,
+                sourceStoreId,
+                unitPrice: item.product.cost || 0 // Transfers usually use cost or 0
+            };
+        }).filter(res => res.sourceStoreId !== ''); // Only proceed with items that have a source store selected
 
         onProceed(resolutions);
     };
@@ -101,7 +113,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
             onClose={onCancel}
             title="⚠️ Advertencia de Inventario"
         >
-            <div style={{ padding: '1rem 0' }}>
+            <div style={{ padding: '0 0 1rem 0' }}>
                 <p style={{ marginBottom: '1.5rem', lineHeight: 1.5, color: 'var(--muted-foreground)' }}>
                     Algunos productos agregados al carrito no están disponibles en esta tienda.
                     Por favor, selecciona desde qué sucursal deseas transferir los productos faltantes.

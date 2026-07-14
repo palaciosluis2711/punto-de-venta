@@ -6,12 +6,14 @@ import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { ArrowLeft } from 'lucide-react';
 import type { Purchase } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 
 export const PurchaseEditPage: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { purchases, updatePurchase } = usePurchases();
     const { addStockToStore } = useInventory();
+    const { showToast } = useToast();
 
     // We need the original purchase to revert its effects
     const [originalPurchase, setOriginalPurchase] = useState<Purchase | null>(null);
@@ -52,6 +54,7 @@ export const PurchaseEditPage: React.FC = () => {
             status: 'completed' // Ensure it's active if it was cancelled, or keep active
         });
 
+        showToast('Compra modificada exitosamente', 'success');
         navigate('/purchases');
     };
 

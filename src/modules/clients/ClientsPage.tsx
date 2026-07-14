@@ -9,11 +9,13 @@ import { Modal } from '../../shared/components/Modal';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { Plus, Search, Users } from 'lucide-react';
 import type { Client } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 
 export const ClientsPage: React.FC = () => {
     const { clients, addClient, updateClient, deleteClient, searchClients } = useClients();
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const { showToast } = useToast();
     const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [viewingClient, setViewingClient] = useState<Client | null>(null);
@@ -37,8 +39,10 @@ export const ClientsPage: React.FC = () => {
     const handleFormSubmit = (data: Omit<Client, 'id'>) => {
         if (editingClient) {
             updateClient(editingClient.id, data);
+            showToast('Cliente modificado exitosamente', 'success');
         } else {
             addClient(data);
+            showToast('Cliente creado exitosamente', 'success');
         }
         setIsFormOpen(false);
     };
@@ -113,7 +117,10 @@ export const ClientsPage: React.FC = () => {
                 isOpen={!!deleteId}
                 onCancel={() => setDeleteId(null)}
                 onConfirm={() => {
-                    if (deleteId) deleteClient(deleteId);
+                    if (deleteId) {
+                        deleteClient(deleteId);
+                        showToast('Cliente eliminado', 'info');
+                    }
                     setDeleteId(null);
                 }}
                 title="Eliminar Cliente"

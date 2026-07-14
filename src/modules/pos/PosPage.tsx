@@ -21,6 +21,7 @@ import { useStores } from '../settings/hooks/useStores';
 import { useTransfers } from '../transfers/hooks/useTransfers';
 import { useNotifications } from '../notifications/hooks/useNotifications';
 import type { Sale } from '../sales/types';
+import { useToast } from '../../shared/components/Toast/useToast';
 import './PosPage.css';
 
 import { useOutletContext } from 'react-router-dom';
@@ -44,6 +45,7 @@ export const PosPage: React.FC = () => {
     const { stores } = useStores();
     const { addTransfer } = useTransfers();
     const { addNotification } = useNotifications();
+    const { showToast } = useToast();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -311,13 +313,13 @@ export const PosPage: React.FC = () => {
             const transferItems = items.map(item => ({
                 productId: item.productId,
                 productName: item.productName,
-                quantity: item.missingQuantity,
+                quantity: item.transferredQuantity,
                 unitCost: item.unitPrice,
-                subtotal: item.missingQuantity * item.unitPrice
+                subtotal: item.transferredQuantity * item.unitPrice
             }));
 
             // Create transfer record
-            addTransfer({
+            const createdTransfer = addTransfer({
                 date: new Date().toISOString(),
                 sourceStoreId,
                 sourceStoreName,
@@ -335,25 +337,33 @@ export const PosPage: React.FC = () => {
                 inventoryMovements.push({
                     productId: item.productId,
                     storeId: sourceStoreId,
-                    quantity: -item.missingQuantity
+                    quantity: -item.transferredQuantity
                 });
                 // Add to active store (so the sale can deduct it normally)
                 inventoryMovements.push({
                     productId: item.productId,
                     storeId: activeStoreId,
-                    quantity: item.missingQuantity
+                    quantity: item.transferredQuantity
                 });
             });
 
             // Send notification
-            const transferredList = items.map(i => `- ${i.productName} (Cant: ${i.missingQuantity})`).join('\n');
+            const transferredList = items.map(i => {
+                let text = `- ${i.productName} (Cant: ${i.transferredQuantity})`;
+                if (i.transferredQuantity < i.requestedQuantity) {
+                    text += `\n  *Nota: Se requirieron ${i.requestedQuantity} pero solo se transfirieron ${i.transferredQuantity} por falta de stock. Tu inventario quedó en 0.*`;
+                }
+                return text;
+            }).join('\n');
+            
             addNotification({
                 title: 'Transferencia Automática de Stock',
-                message: `La tienda ${activeStoreName} vendió productos que no estaban disponibles en su stock, por lo que han pedido transferirlos desde esta tienda para completar la venta.\n\nLos productos transferidos fueron:\n${transferredList}`,
+                message: `${activeStoreName} vendió productos que no estaban disponibles en su stock, por lo que han pedido transferirlos desde esta tienda para completar la venta.\n\nLos productos transferidos fueron:\n${transferredList}`,
                 sourceStoreId: activeStoreId,
                 targetStoreId: sourceStoreId,
                 priority: 'normal',
-                type: 'transfer'
+                type: 'transfer',
+                relatedEntityId: createdTransfer.id
             });
         });
 
@@ -410,6 +420,7 @@ export const PosPage: React.FC = () => {
         // Clear Cart and Close Finalize Modal
         clearCart();
         setIsFinalizeModalOpen(false);
+        showToast('Venta procesada con éxito', 'success');
 
         // Reset to Default Client for the next sale (will be ready when modal closes)
         const defaultClient = clients.find(c => c.isDefault) || clients[0] || null;
@@ -460,7 +471,7 @@ export const PosPage: React.FC = () => {
 
 
     return (
-        <div className="pos-layout">
+        <div className="pos-layout animate-in fade-in duration-300">
             <div className="pos-main">
                 <div className="pos-search-bar" style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ flex: 1 }}>

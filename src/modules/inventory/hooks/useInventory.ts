@@ -77,7 +77,7 @@ export const useInventory = () => {
 
             const currentInventory = p.inventory || {};
             const currentStoreStock = currentInventory[storeId] || 0;
-            const newStoreStock = currentStoreStock + quantity;
+            const newStoreStock = Math.max(0, currentStoreStock + quantity);
 
             const newInventory = {
                 ...currentInventory,
@@ -110,7 +110,7 @@ export const useInventory = () => {
 
             productMovements.forEach(move => {
                 const currentStoreStock = newInventory[move.storeId] || 0;
-                newInventory[move.storeId] = currentStoreStock + move.quantity;
+                newInventory[move.storeId] = Math.max(0, currentStoreStock + move.quantity);
             });
 
             // Recalculate global stock

@@ -6,14 +6,16 @@ import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
 import { Input } from '../../shared/components/Input';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
-import { Plus, ArrowRightLeft, Eye, Printer, RotateCcw, Edit, Filter } from 'lucide-react';
+import { Plus, ArrowRightLeft, Eye, Printer, RotateCcw, Edit, Filter, Copy } from 'lucide-react';
 import type { Transfer } from './types';
+import { useToast } from '../../shared/components/Toast/useToast';
 import './TransfersPage.css';
 
 export const TransfersPage: React.FC = () => {
     const { transfers, updateTransfer } = useTransfers();
     const { updateStockBulk } = useInventory();
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const [viewingTransfer, setViewingTransfer] = useState<Transfer | null>(null);
     const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
@@ -267,7 +269,7 @@ export const TransfersPage: React.FC = () => {
                                             ${transfer.totalValue.toFixed(2)}
                                         </td>
                                         <td className="table-cell-center">
-                                            <span className={`badge-status ${transfer.status}`}>
+                                            <span className={`badge-status ${transfer.status} ${transfer.notes?.includes('automática') ? 'automated' : ''}`}>
                                                 {transfer.status === 'completed' ? 'Completado' : 'Cancelado'}
                                             </span>
                                         </td>
@@ -289,8 +291,9 @@ export const TransfersPage: React.FC = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         icon={<Edit size={16} />}
-                                                        title="Editar Transferencia"
+                                                        title={transfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : "Editar Transferencia"}
                                                         onClick={() => navigate(`/transfers/edit/${transfer.id}`)}
+                                                        disabled={transfer.notes?.includes('automática')}
                                                     />
                                                 )}
                                             </div>
@@ -318,63 +321,91 @@ export const TransfersPage: React.FC = () => {
                         {/* Printable Area */}
                         <div ref={printRef} className="printable-area">
                             <div className="details-header mb-6">
-                                <div className="flex justify-between items-start">
+                                <div className="flex justify-between items-start" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                                     <div>
-                                        <h3 className="text-xl font-bold mb-1">Orden de Transferencia</h3>
-                                        <p className="text-muted text-sm">ID: {viewingTransfer.id.slice(0, 8)}</p>
+                                        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 'bold' }}>Orden de Transferencia</h3>
+                                        <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            ID: {viewingTransfer.id.slice(0, 8)}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                style={{ padding: '0.25rem', height: 'auto', color: 'var(--text-secondary)' }}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(viewingTransfer.id);
+                                                    showToast('Copiado al Portapapeles con éxito', 'success');
+                                                }}
+                                                title="Copiar ID"
+                                            >
+                                                <Copy size={14} />
+                                            </Button>
+                                        </p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-medium">{new Date(viewingTransfer.date).toLocaleDateString()}</p>
-                                        <span className={`badge-status ${viewingTransfer.status}`}>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontWeight: '500', margin: '0 0 0.25rem 0' }}>{new Date(viewingTransfer.date).toLocaleDateString()}</p>
+                                        <span style={{ 
+                                            padding: '0.25rem 0.5rem', 
+                                            borderRadius: '999px', 
+                                            fontSize: '0.75rem',
+                                            backgroundColor: viewingTransfer.status === 'completed' 
+                                                ? (viewingTransfer.notes?.includes('automática') ? '#8b5cf6' : 'var(--success)') 
+                                                : 'var(--danger)',
+                                            color: '#fff'
+                                        }}>
                                             {viewingTransfer.status === 'completed' ? 'Completado' : 'Cancelado'}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="mt-4 grid grid-cols-2 gap-4">
-                                    <div className="flex flex-col gap-1">
-                                        <p className="text-sm text-muted">Origen</p>
-                                        <p className="font-medium p-2 bg-muted/10 rounded border border-border">{viewingTransfer.sourceStoreName}</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Origen</p>
+                                        <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                            {viewingTransfer.sourceStoreName}
+                                        </p>
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                        <p className="text-sm text-muted">Destino</p>
-                                        <p className="font-medium p-2 bg-muted/10 rounded border border-border">{viewingTransfer.destinationStoreName}</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Destino</p>
+                                        <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                            {viewingTransfer.destinationStoreName}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="details-table-wrapper mb-6 border rounded-md overflow-hidden">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-muted/50">
+                            <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+                                    <thead style={{ backgroundColor: 'var(--muted)' }}>
                                         <tr>
-                                            <th className="p-2 text-left">Producto</th>
-                                            <th className="p-2 text-right">Cant.</th>
-                                            <th className="p-2 text-right">Valor U.</th>
-                                            <th className="p-2 text-right">Total</th>
+                                            <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Producto</th>
+                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Cant.</th>
+                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Valor U.</th>
+                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {viewingTransfer.items.map((item, idx) => (
-                                            <tr key={idx} className="border-t border-border">
-                                                <td className="p-2">{item.productName}</td>
-                                                <td className="p-2 text-right">{item.quantity}</td>
-                                                <td className="p-2 text-right">${item.unitCost.toFixed(2)}</td>
-                                                <td className="p-2 text-right font-medium">${item.subtotal.toFixed(2)}</td>
+                                            <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                                                <td style={{ padding: '0.5rem' }}>{item.productName}</td>
+                                                <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.quantity}</td>
+                                                <td style={{ padding: '0.5rem', textAlign: 'right' }}>${item.unitCost.toFixed(2)}</td>
+                                                <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '500' }}>${item.subtotal.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot className="bg-muted/20 font-medium">
-                                        <tr className="border-t border-border">
-                                            <td colSpan={3} className="p-2 text-right">Valor Total Transferido</td>
-                                            <td className="p-2 text-right text-lg">${viewingTransfer.totalValue.toFixed(2)}</td>
+                                    <tfoot style={{ backgroundColor: 'var(--muted)', fontWeight: '500' }}>
+                                        <tr>
+                                            <td colSpan={3} style={{ padding: '0.5rem', textAlign: 'right' }}>Valor Total Transferido</td>
+                                            <td style={{ padding: '0.5rem', textAlign: 'right', fontSize: '1.125rem' }}>${viewingTransfer.totalValue.toFixed(2)}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
 
                             {viewingTransfer.notes && (
-                                <div className="mb-6">
-                                    <p className="text-sm text-muted">Notas</p>
-                                    <p className="text-sm italic p-2 bg-muted/20 rounded">{viewingTransfer.notes}</p>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '0.25rem' }}>Notas</p>
+                                    <p style={{ fontSize: '0.875rem', fontStyle: 'italic', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
+                                        {viewingTransfer.notes}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -387,6 +418,8 @@ export const TransfersPage: React.FC = () => {
                                         variant="outline"
                                         onClick={() => navigate(`/transfers/edit/${viewingTransfer.id}`)}
                                         icon={<Edit size={16} />}
+                                        disabled={viewingTransfer.notes?.includes('automática')}
+                                        title={viewingTransfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : ""}
                                     >
                                         Editar
                                     </Button>
@@ -395,6 +428,8 @@ export const TransfersPage: React.FC = () => {
                                         className="text-danger border-danger hover:bg-danger/10"
                                         onClick={handleRevertClick}
                                         icon={<RotateCcw size={16} />}
+                                        disabled={viewingTransfer.notes?.includes('automática')}
+                                        title={viewingTransfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : ""}
                                     >
                                         Revertir
                                     </Button>
