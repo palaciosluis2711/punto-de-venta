@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useCallback, type ReactNode } from 'react';
 import { CheckCircle2, AlertTriangle, Info } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
