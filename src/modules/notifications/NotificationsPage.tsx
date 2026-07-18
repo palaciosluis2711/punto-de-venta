@@ -25,11 +25,11 @@ const TransferNotes: React.FC<{ notes?: string }> = ({ notes }) => {
     }
 
     return (
-        <div 
-            style={{ 
-                fontSize: '0.875rem', 
-                padding: '0.5rem', 
-                backgroundColor: 'var(--surface-hover)', 
+        <div
+            style={{
+                fontSize: '0.875rem',
+                padding: '0.5rem',
+                backgroundColor: 'var(--surface-hover)',
                 borderRadius: '4px',
                 flexShrink: 0
             }}

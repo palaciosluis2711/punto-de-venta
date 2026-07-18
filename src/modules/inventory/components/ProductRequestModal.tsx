@@ -11,6 +11,7 @@ export interface RequestItem {
     productId: string;
     productName: string;
     requestedQuantity: number | string;
+    currentStock?: number;
 }
 
 interface ProductRequestModalProps {
@@ -279,8 +280,8 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({
                                                         </div>
                                                     </td>
                                                     <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
-                                                        <span style={{ color: item.currentStock <= 0 ? 'var(--error)' : 'inherit', fontWeight: item.currentStock <= 0 ? 'bold' : 'normal' }}>
-                                                            {item.currentStock}
+                                                        <span style={{ color: (item.currentStock ?? 0) <= 0 ? 'var(--error)' : 'inherit', fontWeight: (item.currentStock ?? 0) <= 0 ? 'bold' : 'normal' }}>
+                                                            {item.currentStock ?? 0}
                                                         </span>
                                                         {targetStock !== null && (
                                                             <span style={{ 
