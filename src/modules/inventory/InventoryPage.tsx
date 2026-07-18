@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
-import { Plus, Search, Trash2, Copy, Check, X } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Plus, Search, Trash2, Copy, Check, X, Send } from 'lucide-react';
 import { useInventory } from './hooks/useInventory';
 import { useStores } from '../settings/hooks/useStores';
 import { ProductTable } from './components/ProductTable';
 import { ProductForm } from './components/ProductForm';
+import { ProductRequestModal, type RequestItem } from './components/ProductRequestModal';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import type { Product } from './types';
 import { useToast } from '../../shared/components/Toast/useToast';
+import { useNotifications } from '../notifications/hooks/useNotifications';
 
 export const InventoryPage: React.FC = () => {
+    const { activeStoreId } = useOutletContext<{ activeStoreId: string }>();
     const { products, addProduct, updateProduct, deleteProduct, deleteProductsBulk, searchProducts } = useInventory();
     const { stores } = useStores();
     const { showToast } = useToast();
+    const { addNotification } = useNotifications();
     const [copiedBarcode, setCopiedBarcode] = useState(false);
+    const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
     const handleCopyBarcode = () => {
         if (viewingProduct?.barcode) {
@@ -134,6 +140,20 @@ export const InventoryPage: React.FC = () => {
         }
     };
 
+    const handleProductRequestSubmit = (targetStoreId: string, items: RequestItem[], notes: string) => {
+        addNotification({
+            title: 'Nueva Solicitud de Productos',
+            message: `Se ha solicitado la transferencia de ${items.length} producto(s).\n\nNotas: ${notes || 'Sin notas.'}`,
+            sourceStoreId: activeStoreId,
+            targetStoreId,
+            priority: 'normal',
+            type: 'request',
+            payload: { items, status: 'pending' }
+        });
+        showToast('Solicitud enviada con éxito', 'success');
+        setIsRequestModalOpen(false);
+    };
+
 
     return (
         <React.Fragment>
@@ -157,9 +177,14 @@ export const InventoryPage: React.FC = () => {
                                 </Button>
                             )}
                             {!isModalOpen && (
-                                <Button onClick={handleAddClick} icon={<Plus size={20} />}>
-                                    Nuevo Producto
-                                </Button>
+                                <>
+                                    <Button variant="outline" onClick={() => setIsRequestModalOpen(true)} icon={<Send size={20} />}>
+                                        Solicitar Productos
+                                    </Button>
+                                    <Button onClick={handleAddClick} icon={<Plus size={20} />}>
+                                        Nuevo Producto
+                                    </Button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -188,6 +213,7 @@ export const InventoryPage: React.FC = () => {
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                         <ProductTable
                             products={filteredProducts}
+                            activeStoreId={activeStoreId}
                             onEdit={handleEditClick}
                             onDelete={handleDeleteClick}
                             selectedIds={selectedIds}
@@ -396,6 +422,15 @@ export const InventoryPage: React.FC = () => {
                 onConfirm={confirmDelete}
                 onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
                 confirmText="Sí, eliminar"
+            />
+
+            <ProductRequestModal
+                isOpen={isRequestModalOpen}
+                onClose={() => setIsRequestModalOpen(false)}
+                products={products}
+                activeStoreId={activeStoreId}
+                stores={stores}
+                onSubmit={handleProductRequestSubmit}
             />
         </React.Fragment>
     );

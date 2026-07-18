@@ -85,6 +85,11 @@ export const useNotifications = () => {
         saveAndSync(updated);
     }, [notifications]);
 
+    const updateNotification = useCallback((id: string, updates: Partial<Notification>) => {
+        const updated = notifications.map(n => n.id === id ? { ...n, ...updates } : n);
+        saveAndSync(updated);
+    }, [notifications]);
+
     const deleteNotification = useCallback((id: string) => {
         const updated = notifications.filter(n => n.id !== id);
         saveAndSync(updated);
@@ -99,6 +104,7 @@ export const useNotifications = () => {
     return {
         notifications,
         addNotification,
+        updateNotification,
         markAsRead,
         markAllAsRead,
         deleteNotification,

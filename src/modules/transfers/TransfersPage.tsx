@@ -11,9 +11,36 @@ import type { Transfer } from './types';
 import { useToast } from '../../shared/components/Toast/useToast';
 import './TransfersPage.css';
 
+const TransferNotes: React.FC<{ notes?: string }> = ({ notes }) => {
+    const hasNotes = !!notes && notes.trim().length > 0;
+
+    if (!hasNotes) {
+        return (
+            <div style={{ fontSize: '0.875rem', padding: '0.5rem', backgroundColor: 'var(--surface-hover)', borderRadius: '4px', flexShrink: 0 }}>
+                <span style={{ fontWeight: '500', color: 'var(--muted-foreground)' }}>Notas:</span> <span style={{ fontStyle: 'italic', color: 'var(--muted-foreground)' }}>No hay notas</span>
+            </div>
+        );
+    }
+
+    return (
+        <div 
+            style={{ 
+                fontSize: '0.875rem', 
+                padding: '0.5rem', 
+                backgroundColor: 'var(--surface-hover)', 
+                borderRadius: '4px',
+                flexShrink: 0
+            }}
+        >
+            <span style={{ fontWeight: '500', color: 'var(--muted-foreground)' }}>Notas:</span>{' '}
+            <span style={{ fontStyle: 'italic' }}>{notes}</span>
+        </div>
+    );
+};
+
 export const TransfersPage: React.FC = () => {
     const { transfers, updateTransfer } = useTransfers();
-    const { updateStockBulk } = useInventory();
+    const { products, updateStockBulk } = useInventory();
     const navigate = useNavigate();
     const { showToast } = useToast();
 
@@ -38,6 +65,47 @@ export const TransfersPage: React.FC = () => {
     // Derived options for selects
     const uniqueSources = useMemo(() => Array.from(new Set(transfers.map(t => t.sourceStoreName))), [transfers]);
     const uniqueDestinations = useMemo(() => Array.from(new Set(transfers.map(t => t.destinationStoreName))), [transfers]);
+
+    const lastManualTransferId = useMemo(() => {
+        const manualTransfers = transfers.filter(t => !t.notes?.includes('automática') && t.status === 'completed');
+        manualTransfers.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return manualTransfers[0]?.id;
+    }, [transfers]);
+
+    const isFromRequest = (transfer: Transfer) => !!transfer.notes?.includes('solicitud');
+    const isAutomated = (transfer: Transfer) => !!transfer.notes?.includes('automática') && !isFromRequest(transfer);
+
+    const canRevertOrEditTransfer = (transfer: Transfer) => {
+        if (transfer.status !== 'completed') return false;
+        
+        // 1. No se pueden editar transferencias automáticas
+        if (transfer.notes?.includes('automática')) return false;
+
+        // 2. Solo la ÚLTIMA transferencia manual puede ser editada o revertida
+        if (transfer.id !== lastManualTransferId) return false;
+
+        // 3. Verifica si el stock actual en el destino es suficiente para revertir la transferencia
+        return transfer.items.every(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (!product) return false;
+            const currentStockInDestination = product.inventory?.[transfer.destinationStoreId] || 0;
+            return currentStockInDestination >= item.quantity;
+        });
+    };
+
+    const getTooltipMessage = (transfer: Transfer) => {
+        if (transfer.status !== 'completed') return "";
+        if (transfer.notes?.includes('automática')) {
+            return "Transferencia automática (No editable)";
+        }
+        if (transfer.id !== lastManualTransferId) {
+            return "Solo la última transferencia manual es editable/reversible";
+        }
+        if (!canRevertOrEditTransfer(transfer)) {
+            return "No reversible/editable (Stock insuficiente en destino)";
+        }
+        return "";
+    };
 
     // Filtered Transfers
     const filteredTransfers = useMemo(() => {
@@ -269,7 +337,7 @@ export const TransfersPage: React.FC = () => {
                                             ${transfer.totalValue.toFixed(2)}
                                         </td>
                                         <td className="table-cell-center">
-                                            <span className={`badge-status ${transfer.status} ${transfer.notes?.includes('automática') ? 'automated' : ''}`}>
+                                            <span className={`badge-status ${transfer.status} ${isFromRequest(transfer) ? 'from-request' : isAutomated(transfer) ? 'automated' : ''}`}>
                                                 {transfer.status === 'completed' ? 'Completado' : 'Cancelado'}
                                             </span>
                                         </td>
@@ -291,9 +359,9 @@ export const TransfersPage: React.FC = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         icon={<Edit size={16} />}
-                                                        title={transfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : "Editar Transferencia"}
+                                                        title={getTooltipMessage(transfer) || "Editar Transferencia"}
                                                         onClick={() => navigate(`/transfers/edit/${transfer.id}`)}
-                                                        disabled={transfer.notes?.includes('automática')}
+                                                        disabled={!canRevertOrEditTransfer(transfer)}
                                                     />
                                                 )}
                                             </div>
@@ -317,109 +385,94 @@ export const TransfersPage: React.FC = () => {
                 title="Detalle de Transferencia"
             >
                 {viewingTransfer && (
-                    <div className="transfer-details-content">
+                    <div className="transfer-details-content" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '65vh', overflow: 'hidden' }}>
                         {/* Printable Area */}
-                        <div ref={printRef} className="printable-area">
-                            <div className="details-header mb-6">
-                                <div className="flex justify-between items-start" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                    <div>
-                                        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 'bold' }}>Orden de Transferencia</h3>
-                                        <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            ID: {viewingTransfer.id.slice(0, 8)}
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                style={{ padding: '0.25rem', height: 'auto', color: 'var(--text-secondary)' }}
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(viewingTransfer.id);
-                                                    showToast('Copiado al Portapapeles con éxito', 'success');
-                                                }}
-                                                title="Copiar ID"
-                                            >
-                                                <Copy size={14} />
-                                            </Button>
-                                        </p>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontWeight: '500', margin: '0 0 0.25rem 0' }}>{new Date(viewingTransfer.date).toLocaleDateString()}</p>
-                                        <span style={{ 
-                                            padding: '0.25rem 0.5rem', 
-                                            borderRadius: '999px', 
-                                            fontSize: '0.75rem',
-                                            backgroundColor: viewingTransfer.status === 'completed' 
-                                                ? (viewingTransfer.notes?.includes('automática') ? '#8b5cf6' : 'var(--success)') 
-                                                : 'var(--danger)',
-                                            color: '#fff'
-                                        }}>
-                                            {viewingTransfer.status === 'completed' ? 'Completado' : 'Cancelado'}
-                                        </span>
-                                    </div>
+                        <div ref={printRef} className="printable-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
+                            <div className="details-header" style={{ flexShrink: 0 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.125rem', fontWeight: 'bold' }}>Orden de Transferencia</h3>
+                                    <p style={{ fontWeight: '500', margin: 0, fontSize: '0.875rem' }}>{new Date(viewingTransfer.date).toLocaleDateString()}</p>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Origen</p>
-                                        <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
-                                            {viewingTransfer.sourceStoreName}
-                                        </p>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', margin: 0 }}>Destino</p>
-                                        <p style={{ fontWeight: '500', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
-                                            {viewingTransfer.destinationStoreName}
-                                        </p>
-                                    </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        ID: {viewingTransfer.id.slice(0, 8)}
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            style={{ padding: '0.25rem', height: 'auto', color: 'var(--text-secondary)' }}
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(viewingTransfer.id);
+                                                showToast('Copiado al Portapapeles con éxito', 'success');
+                                            }}
+                                            title="Copiar ID"
+                                        >
+                                            <Copy size={14} />
+                                        </Button>
+                                    </p>
+                                    <span style={{ 
+                                        padding: '0.125rem 0.5rem', 
+                                        borderRadius: '999px', 
+                                        fontSize: '0.75rem',
+                                        backgroundColor: viewingTransfer.status === 'completed' 
+                                            ? (isFromRequest(viewingTransfer) ? '#f97316' : (isAutomated(viewingTransfer) ? '#8b5cf6' : 'var(--success)')) 
+                                            : 'var(--danger)',
+                                        color: '#fff'
+                                    }}>
+                                        {viewingTransfer.status === 'completed' ? 'Completado' : 'Cancelado'}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--surface-hover)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
+                                    <p style={{ fontSize: '0.875rem', margin: 0 }}>
+                                        <span style={{ color: 'var(--muted-foreground)' }}>Origen:</span> <span style={{ fontWeight: '500' }}>{viewingTransfer.sourceStoreName}</span>
+                                    </p>
+                                    <p style={{ fontSize: '0.875rem', margin: 0 }}>
+                                        <span style={{ color: 'var(--muted-foreground)' }}>Destino:</span> <span style={{ fontWeight: '500' }}>{viewingTransfer.destinationStoreName}</span>
+                                    </p>
                                 </div>
                             </div>
 
-                            <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+                                    <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
                                     <thead style={{ backgroundColor: 'var(--muted)' }}>
                                         <tr>
-                                            <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Producto</th>
-                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Cant.</th>
-                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Valor U.</th>
-                                            <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Total</th>
+                                            <th style={{ position: 'sticky', top: 0, backgroundColor: 'var(--surface)', zIndex: 1, padding: '0.5rem', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Producto</th>
+                                            <th style={{ position: 'sticky', top: 0, backgroundColor: 'var(--surface)', zIndex: 1, padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Cant.</th>
+                                            <th style={{ position: 'sticky', top: 0, backgroundColor: 'var(--surface)', zIndex: 1, padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Valor U.</th>
+                                            <th style={{ position: 'sticky', top: 0, backgroundColor: 'var(--surface)', zIndex: 1, padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid var(--border)' }}>Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {viewingTransfer.items.map((item, idx) => (
                                             <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                                                <td style={{ padding: '0.5rem' }}>{item.productName}</td>
-                                                <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.quantity}</td>
-                                                <td style={{ padding: '0.5rem', textAlign: 'right' }}>${item.unitCost.toFixed(2)}</td>
-                                                <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '500' }}>${item.subtotal.toFixed(2)}</td>
+                                                <td style={{ padding: '0.2rem' }}>{item.productName}</td>
+                                                <td style={{ padding: '0.2rem', textAlign: 'right' }}>{item.quantity}</td>
+                                                <td style={{ padding: '0.2rem', textAlign: 'right' }}>${item.unitCost.toFixed(2)}</td>
+                                                <td style={{ padding: '0.2rem', textAlign: 'right', fontWeight: '100' }}>${item.subtotal.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot style={{ backgroundColor: 'var(--muted)', fontWeight: '500' }}>
-                                        <tr>
-                                            <td colSpan={3} style={{ padding: '0.5rem', textAlign: 'right' }}>Valor Total Transferido</td>
-                                            <td style={{ padding: '0.5rem', textAlign: 'right', fontSize: '1.125rem' }}>${viewingTransfer.totalValue.toFixed(2)}</td>
-                                        </tr>
-                                    </tfoot>
                                 </table>
+                                </div>
+                                <div style={{ backgroundColor: 'var(--muted)', fontWeight: '100', padding: '0.2rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '1rem' }}>Valor Total Transferido</span>
+                                    <span style={{ fontSize: '1rem' }}>${viewingTransfer.totalValue.toFixed(2)}</span>
+                                </div>
                             </div>
 
-                            {viewingTransfer.notes && (
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '0.25rem' }}>Notas</p>
-                                    <p style={{ fontSize: '0.875rem', fontStyle: 'italic', padding: '0.5rem', backgroundColor: 'var(--muted)', borderRadius: '4px', margin: 0 }}>
-                                        {viewingTransfer.notes}
-                                    </p>
-                                </div>
-                            )}
+                            <TransferNotes notes={viewingTransfer.notes} />
                         </div>
 
                         {/* Modal Actions (Not Printed) */}
-                        <div className="modal-actions flex justify-end items-center pt-4 border-t border-border no-print" style={{ gap: '1rem' }}>
+                        <div className="modal-actions flex justify-end items-center pt-4 border-t border-border no-print" style={{ gap: '1rem', flexShrink: 0 }}>
                             {viewingTransfer.status === 'completed' && (
                                 <>
                                     <Button
                                         variant="outline"
                                         onClick={() => navigate(`/transfers/edit/${viewingTransfer.id}`)}
                                         icon={<Edit size={16} />}
-                                        disabled={viewingTransfer.notes?.includes('automática')}
-                                        title={viewingTransfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : ""}
+                                        disabled={!canRevertOrEditTransfer(viewingTransfer)}
+                                        title={getTooltipMessage(viewingTransfer)}
                                     >
                                         Editar
                                     </Button>
@@ -428,8 +481,8 @@ export const TransfersPage: React.FC = () => {
                                         className="text-danger border-danger hover:bg-danger/10"
                                         onClick={handleRevertClick}
                                         icon={<RotateCcw size={16} />}
-                                        disabled={viewingTransfer.notes?.includes('automática')}
-                                        title={viewingTransfer.notes?.includes('automática') ? "Transferencia automática (No editable)" : ""}
+                                        disabled={!canRevertOrEditTransfer(viewingTransfer)}
+                                        title={getTooltipMessage(viewingTransfer)}
                                     >
                                         Revertir
                                     </Button>

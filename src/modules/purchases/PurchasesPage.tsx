@@ -13,7 +13,7 @@ import './PurchasesPage.css';
 
 export const PurchasesPage: React.FC = () => {
     const { purchases, updatePurchase } = usePurchases();
-    const { addStockToStore } = useInventory();
+    const { products, addStockToStore } = useInventory();
     const navigate = useNavigate();
     const { showToast } = useToast();
 
@@ -35,9 +35,22 @@ export const PurchasesPage: React.FC = () => {
         localStorage.setItem('purchases_show_filters', JSON.stringify(showFilters));
     }, [showFilters]);
 
-    // Derived options for selects
     const uniqueStores = useMemo(() => Array.from(new Set(purchases.map(p => p.storeName))), [purchases]);
     const uniqueSuppliers = useMemo(() => Array.from(new Set(purchases.map(p => p.supplierName))).sort(), [purchases]);
+
+    const canRevertPurchase = (purchase: Purchase) => {
+        if (purchase.status !== 'completed') return false;
+        
+        // Verifica si el stock actual es suficiente para revertir la compra
+        // Si el stock actual es menor a la cantidad comprada, significa que
+        // ya se vendieron o transfirieron productos y no se puede revertir.
+        return purchase.items.every(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (!product) return false;
+            const currentStock = product.inventory?.[purchase.storeId] || 0;
+            return currentStock >= item.quantity;
+        });
+    };
 
     // Filtered Purchases
     const filteredPurchases = useMemo(() => {
@@ -265,7 +278,8 @@ export const PurchasesPage: React.FC = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         icon={<Edit size={16} />}
-                                                        title="Editar Compra"
+                                                        title={canRevertPurchase(purchase) ? "Editar Compra" : "No editable (Stock insuficiente)"}
+                                                        disabled={!canRevertPurchase(purchase)}
                                                         onClick={() => navigate(`/purchases/edit/${purchase.id}`)}
                                                     />
                                                 )}
@@ -377,6 +391,8 @@ export const PurchasesPage: React.FC = () => {
                                         variant="outline"
                                         onClick={() => navigate(`/purchases/edit/${viewingPurchase.id}`)}
                                         icon={<Edit size={16} />}
+                                        disabled={!canRevertPurchase(viewingPurchase)}
+                                        title={!canRevertPurchase(viewingPurchase) ? "No editable (Stock insuficiente)" : ""}
                                     >
                                         Editar
                                     </Button>
@@ -385,6 +401,8 @@ export const PurchasesPage: React.FC = () => {
                                         className="text-danger border-danger hover:bg-danger/10"
                                         onClick={handleRevertClick}
                                         icon={<RotateCcw size={16} />}
+                                        disabled={!canRevertPurchase(viewingPurchase)}
+                                        title={!canRevertPurchase(viewingPurchase) ? "No reversible (Stock insuficiente)" : ""}
                                     >
                                         Revertir Compra
                                     </Button>

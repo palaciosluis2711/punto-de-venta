@@ -11,6 +11,7 @@ interface ProductTableProps {
     selectedIds?: string[];
     onSelectionChange?: (ids: string[]) => void;
     onView?: (product: Product) => void;
+    activeStoreId: string;
 }
 
 export const ProductTable: React.FC<ProductTableProps> = ({
@@ -19,7 +20,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({
     onDelete,
     selectedIds = [],
     onSelectionChange,
-    onView
+    onView,
+    activeStoreId
 }) => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const allSelected = products.length > 0 && products.every(p => selectedIds.includes(p.id));
@@ -127,8 +129,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                                     {product.associatedProducts && product.associatedProducts.length > 0 ? (
                                         <span className="text-muted">-</span>
                                     ) : (
-                                        <span className={product.stock <= (product.minStock ?? 5) ? 'text-danger font-bold' : ''}>
-                                            {product.stock}
+                                        <span className={(product.inventory?.[activeStoreId] ?? 0) <= (product.minStock ?? 5) ? 'text-danger font-bold' : ''}>
+                                            {product.inventory?.[activeStoreId] ?? 0} <span className="text-muted" style={{ fontWeight: 'normal', fontSize: '0.85em' }}>({product.stock})</span>
                                         </span>
                                     )}
                                 </td>

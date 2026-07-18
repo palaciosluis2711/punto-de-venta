@@ -40,6 +40,14 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
 }) => {
     // Map of productId -> selected sourceStoreId
     const [selections, setSelections] = useState<Record<string, string>>({});
+    const [noTransfer, setNoTransfer] = useState(false);
+
+    // Reset noTransfer on open
+    useEffect(() => {
+        if (isOpen) {
+            setNoTransfer(false);
+        }
+    }, [isOpen]);
 
     // Initialize selections on mount or when missingItems change
     useEffect(() => {
@@ -85,6 +93,11 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
     };
 
     const handleProceed = () => {
+        if (noTransfer) {
+            onProceed([]);
+            return;
+        }
+
         const resolutions: MissingItemResolution[] = missingItems.map(item => {
             const sourceStoreId = selections[item.product.id] || '';
             let transferredQuantity = item.missingQuantity;
@@ -119,6 +132,19 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                     Por favor, selecciona desde qué sucursal deseas transferir los productos faltantes.
                 </p>
 
+                <div style={{ padding: '1rem', backgroundColor: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input 
+                        type="checkbox" 
+                        id="no-transfer" 
+                        checked={noTransfer} 
+                        onChange={(e) => setNoTransfer(e.target.checked)} 
+                        style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                    />
+                    <label htmlFor="no-transfer" style={{ fontWeight: 500, cursor: 'pointer', margin: 0, color: 'var(--text-primary)' }}>
+                        No transferir de otra tienda
+                    </label>
+                </div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '50vh', overflowY: 'auto' }}>
                     {missingItems.map((item, index) => {
                         const availableStores = stores.filter(s => s.id !== activeStoreId);
@@ -151,7 +177,8 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                         className="input-field"
                                         value={selections[item.product.id] || ''}
                                         onChange={(e) => handleSelectionChange(item.product.id, e.target.value)}
-                                        style={{ borderColor: !selections[item.product.id] ? 'var(--danger)' : 'var(--border)' }}
+                                        style={{ borderColor: !selections[item.product.id] && !noTransfer ? 'var(--danger)' : 'var(--border)' }}
+                                        disabled={noTransfer}
                                     >
                                         <option value="" disabled>Seleccione una sucursal...</option>
                                         {availableStores.map(store => {
@@ -163,9 +190,9 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                             );
                                         })}
                                     </select>
-                                    {!selections[item.product.id] && (
+                                    {!selections[item.product.id] && !noTransfer && (
                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--danger)' }}>
-                                            Ninguna tienda tiene stock suficiente, la venta quedará en números negativos.
+                                            Ninguna tienda tiene stock suficiente, la venta dejará el inventario en 0.
                                         </p>
                                     )}
                                 </div>

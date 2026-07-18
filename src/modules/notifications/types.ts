@@ -11,6 +11,7 @@ export interface Notification {
     priority: NotificationPriority;
     status: NotificationStatus;
     readAt?: string; // ISO String
-    type?: string; // 'transfer', 'inventory', 'system', 'message'
+    type?: string; // 'transfer', 'inventory', 'system', 'message', 'request'
     relatedEntityId?: string; // ID of the transfer or sale related to this
+    payload?: any; // For structured data like request items
 }
