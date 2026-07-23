@@ -687,29 +687,50 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                         No hay impuestos personalizados configurados.
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                        {availableTaxes.map(tax => (
-                            <label key={tax.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--surface-hover)' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={(formData.taxes || []).includes(tax.id)}
-                                    onChange={(e) => {
-                                        const currentTaxes = formData.taxes || [];
-                                        const newTaxes = e.target.checked 
-                                            ? [...currentTaxes, tax.id]
-                                            : currentTaxes.filter(id => id !== tax.id);
-                                        setFormData(prev => ({ ...prev, taxes: newTaxes }));
-                                    }}
-                                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-                                />
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{tax.name}</span>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        {tax.type === 'percentage' ? `${tax.value}%` : `$${tax.value.toFixed(2)}`}
-                                    </span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                        {availableTaxes.map(tax => {
+                            const appliedTax = (formData.taxes || []).find(t => t.id === tax.id);
+                            const isChecked = !!appliedTax;
+
+                            return (
+                                <div key={tax.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--surface-hover)' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={(e) => {
+                                                const currentTaxes = formData.taxes || [];
+                                                const newTaxes = e.target.checked 
+                                                    ? [...currentTaxes, { id: tax.id, method: 'inclusive' as const }]
+                                                    : currentTaxes.filter(t => t.id !== tax.id);
+                                                setFormData(prev => ({ ...prev, taxes: newTaxes }));
+                                            }}
+                                            style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                                        />
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{tax.name}</span>
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                {tax.type === 'percentage' ? `${tax.value}%` : `$${tax.value.toFixed(2)}`}
+                                            </span>
+                                        </div>
+                                    </label>
+                                    {isChecked && (
+                                        <select
+                                            style={{ fontSize: '0.75rem', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
+                                            value={appliedTax.method}
+                                            onChange={(e) => {
+                                                const method = e.target.value as 'inclusive' | 'exclusive';
+                                                const newTaxes = (formData.taxes || []).map(t => t.id === tax.id ? { ...t, method } : t);
+                                                setFormData(prev => ({ ...prev, taxes: newTaxes }));
+                                            }}
+                                        >
+                                            <option value="inclusive">Inclusivo</option>
+                                            <option value="exclusive">Exclusivo</option>
+                                        </select>
+                                    )}
                                 </div>
-                            </label>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

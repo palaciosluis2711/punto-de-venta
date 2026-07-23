@@ -12,7 +12,7 @@ export interface Product {
     image?: string;
     minStock?: number;
     inventory?: Record<string, number>; // storeId -> quantity
-    taxes?: string[]; // Array of custom tax IDs applied to this product
+    taxes?: { id: string; method: 'inclusive' | 'exclusive' }[];
     associatedProducts?: {
         productId: string;
         quantity: number;
