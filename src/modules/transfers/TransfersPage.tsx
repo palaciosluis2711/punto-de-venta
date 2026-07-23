@@ -66,20 +66,20 @@ export const TransfersPage: React.FC = () => {
     const uniqueSources = useMemo(() => Array.from(new Set(transfers.map(t => t.sourceStoreName))), [transfers]);
     const uniqueDestinations = useMemo(() => Array.from(new Set(transfers.map(t => t.destinationStoreName))), [transfers]);
 
+    const isFromRequest = (transfer: Transfer) => !!transfer.notes?.includes('solicitud');
+    const isAutomated = (transfer: Transfer) => !!transfer.notes?.includes('automática') && !isFromRequest(transfer);
+
     const lastManualTransferId = useMemo(() => {
-        const manualTransfers = transfers.filter(t => !t.notes?.includes('automática') && t.status === 'completed');
+        const manualTransfers = transfers.filter(t => !t.notes?.includes('automática') && !isFromRequest(t) && t.status === 'completed');
         manualTransfers.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         return manualTransfers[0]?.id;
     }, [transfers]);
 
-    const isFromRequest = (transfer: Transfer) => !!transfer.notes?.includes('solicitud');
-    const isAutomated = (transfer: Transfer) => !!transfer.notes?.includes('automática') && !isFromRequest(transfer);
-
     const canRevertOrEditTransfer = (transfer: Transfer) => {
         if (transfer.status !== 'completed') return false;
         
-        // 1. No se pueden editar transferencias automáticas
-        if (transfer.notes?.includes('automática')) return false;
+        // 1. No se pueden editar transferencias automáticas ni provenientes de solicitudes
+        if (transfer.notes?.includes('automática') || isFromRequest(transfer)) return false;
 
         // 2. Solo la ÚLTIMA transferencia manual puede ser editada o revertida
         if (transfer.id !== lastManualTransferId) return false;
@@ -95,8 +95,8 @@ export const TransfersPage: React.FC = () => {
 
     const getTooltipMessage = (transfer: Transfer) => {
         if (transfer.status !== 'completed') return "";
-        if (transfer.notes?.includes('automática')) {
-            return "Transferencia automática (No editable)";
+        if (transfer.notes?.includes('automática') || isFromRequest(transfer)) {
+            return "Transferencia automática/por solicitud (No editable)";
         }
         if (transfer.id !== lastManualTransferId) {
             return "Solo la última transferencia manual es editable/reversible";

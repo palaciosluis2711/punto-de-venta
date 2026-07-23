@@ -24,7 +24,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
     const { categories } = useCategories();
     const { brands } = useBrands();
     const { units } = useUnits();
-    const { taxRate } = useTaxes();
+    const { taxes: availableTaxes } = useTaxes();
     // Use Inventory to get list of products for associated lookups
     const { products: allProducts } = useInventory();
 
@@ -74,8 +74,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                     unit: parsed.unit || '',
                     image: parsed.image || '',
                     associatedProducts: parsed.associatedProducts || [],
-                    tax_apply: parsed.tax_apply,
-                    tax_method: parsed.tax_method
+                    taxes: parsed.taxes || []
                 };
             } catch (e) {
                 console.error("Failed to restore product draft", e);
@@ -94,7 +93,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             brand: '',
             unit: '',
             image: '',
-            associatedProducts: []
+            associatedProducts: [],
+            taxes: []
         };
     };
 
@@ -410,7 +410,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                 unit: '',
                 image: '',
                 associatedProducts: [],
-                tax_apply: false
+                taxes: []
             });
             setIsSpecial(false);
             setErrors({});
@@ -680,44 +680,36 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             </div>
 
             {/* Tax Configuration */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div className="input-wrapper">
-                    <label className="input-label">Impuestos (IVA)</label>
-                    <div className="input-container">
-                        <select
-                            name="tax_apply"
-                            value={formData.tax_apply ? 'true' : 'false'}
-                            onChange={(e) => {
-                                const applies = e.target.value === 'true';
-                                setFormData(prev => ({
-                                    ...prev,
-                                    tax_apply: applies,
-                                    // Default to inclusive if turning on, or reset if turning off
-                                    tax_method: applies ? (prev.tax_method || 'inclusive') : undefined
-                                }));
-                            }}
-                            className="input-field"
-                        >
-                            <option value="false">No Aplica / Exento</option>
-                            <option value="true">Sí, Aplica IVA ({taxRate * 100}%)</option>
-                        </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <label className="input-label">Impuestos Aplicables</label>
+                {availableTaxes.length === 0 ? (
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                        No hay impuestos personalizados configurados.
                     </div>
-                </div>
-
-                {formData.tax_apply && (
-                    <div className="input-wrapper animate-in fade-in zoom-in-95">
-                        <label className="input-label">Cálculo de Impuesto</label>
-                        <div className="input-container">
-                            <select
-                                name="tax_method"
-                                value={formData.tax_method || 'inclusive'}
-                                onChange={(e) => setFormData(prev => ({ ...prev, tax_method: e.target.value as 'inclusive' | 'exclusive' }))}
-                                className="input-field"
-                            >
-                                <option value="inclusive">Inclusivo (Precio incluye IVA)</option>
-                                <option value="exclusive">Exclusivo (IVA se suma al precio)</option>
-                            </select>
-                        </div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                        {availableTaxes.map(tax => (
+                            <label key={tax.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--surface-hover)' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={(formData.taxes || []).includes(tax.id)}
+                                    onChange={(e) => {
+                                        const currentTaxes = formData.taxes || [];
+                                        const newTaxes = e.target.checked 
+                                            ? [...currentTaxes, tax.id]
+                                            : currentTaxes.filter(id => id !== tax.id);
+                                        setFormData(prev => ({ ...prev, taxes: newTaxes }));
+                                    }}
+                                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                                />
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{tax.name}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                        {tax.type === 'percentage' ? `${tax.value}%` : `$${tax.value.toFixed(2)}`}
+                                    </span>
+                                </div>
+                            </label>
+                        ))}
                     </div>
                 )}
             </div>
