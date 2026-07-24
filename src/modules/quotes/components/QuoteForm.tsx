@@ -27,8 +27,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
     const activeStoreName = stores.find(s => s.id === activeStoreId)?.name || 'Tienda Principal';
 
     const [clientName, setClientName] = useState('');
-    const [clientSearch, setClientSearch] = useState('');
-    const [showClientDropdown, setShowClientDropdown] = useState(false);
 
     const [isManualClient, setIsManualClient] = useState(false);
     const [manualClientName, setManualClientName] = useState('');
@@ -53,12 +51,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
     const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
     const total = subtotal;
 
-    // Client Autocomplete Logic
-    const filteredClients = clients.filter(c => 
-        c.fullName.toLowerCase().includes(clientSearch.toLowerCase()) || 
-        (c.documentNumber && c.documentNumber.includes(clientSearch))
-    );
-
     const constructQuoteObject = (status: 'draft' | 'sent'): Quote => {
         return {
             id: quoteId || `Q-${Date.now()}`,
@@ -77,7 +69,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
 
     const handleSaveDraft = () => {
         if (items.length === 0) {
-            showToast('Añade al menos un producto', 'warning');
+            showToast('Añade al menos un producto', 'error');
             return;
         }
         const quote = constructQuoteObject('draft');
@@ -89,7 +81,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
 
     const handleExportPDF = () => {
         if (items.length === 0) {
-            showToast('Añade al menos un producto', 'warning');
+            showToast('Añade al menos un producto', 'error');
             return;
         }
 
@@ -102,9 +94,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
         const opt = {
             margin:       1,
             filename:     `Cotizacion_${clientName || 'General'}_${new Date().toISOString().slice(0,10)}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
+            image:        { type: 'jpeg' as const, quality: 0.98 },
             html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' as const }
         };
 
         html2pdf().from(element).set(opt).save().then(() => {
@@ -119,7 +111,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quoteId, items, onSaved })
 
     const handleSendEmail = () => {
         if (items.length === 0) {
-            showToast('Añade al menos un producto', 'warning');
+            showToast('Añade al menos un producto', 'error');
             return;
         }
         

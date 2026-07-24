@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Search, Filter, Trash2, Eye } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Trash2 } from 'lucide-react';
 import { useQuotes } from './hooks/useQuotes';
 import { useStores } from '../settings/hooks/useStores';
 import { Button } from '../../shared/components/Button';
@@ -103,8 +103,7 @@ export const QuotesPage: React.FC = () => {
                                 { value: 'sent', label: 'Enviado' }
                             ]}
                             value={statusFilter}
-                            onChange={(val) => setStatusFilter(val as string)}
-                            placeholder="Filtrar por estado"
+                            onChange={(e: any) => setStatusFilter(e.target.value)}
                         />
                     </div>
                 </div>
