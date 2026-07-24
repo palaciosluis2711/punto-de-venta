@@ -4,6 +4,7 @@ import { Input } from '../../../shared/components/Input';
 import { Button } from '../../../shared/components/Button';
 import { Percent, Plus, Trash2, DollarSign } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 export const TaxesSettings: React.FC = () => {
     const { taxes, addTax, removeTax } = useTaxes();
@@ -126,7 +127,7 @@ export const TaxesSettings: React.FC = () => {
                         label="Nombre del Impuesto"
                         placeholder="Ej: Impuesto a bebidas azucaradas"
                         value={newTaxName}
-                        onChange={e => setNewTaxName(e.target.value)}
+                        onChange={(e: any) => setNewTaxName(e.target.value)}
                         required
                     />
 
@@ -137,21 +138,21 @@ export const TaxesSettings: React.FC = () => {
                             style={{ minHeight: '80px', resize: 'vertical' }}
                             placeholder="Detalles sobre cuándo aplica..."
                             value={newTaxDesc}
-                            onChange={e => setNewTaxDesc(e.target.value)}
+                            onChange={(e: any) => setNewTaxDesc(e.target.value)}
                         />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Tipo de Valor</label>
-                            <select 
+                            <CustomSelect 
                                 className="input-field"
                                 value={newTaxType}
-                                onChange={e => setNewTaxType(e.target.value as 'percentage' | 'fixed')}
+                                onChange={(e: any) => setNewTaxType(e.target.value as 'percentage' | 'fixed')}
                             >
                                 <option value="percentage">Porcentaje (%)</option>
                                 <option value="fixed">Monto Fijo ($)</option>
-                            </select>
+                            </CustomSelect>
                         </div>
                         
                         <Input
@@ -161,7 +162,7 @@ export const TaxesSettings: React.FC = () => {
                             min="0"
                             placeholder={newTaxType === 'percentage' ? '10' : '1.50'}
                             value={newTaxValue}
-                            onChange={e => setNewTaxValue(e.target.value)}
+                            onChange={(e: any) => setNewTaxValue(e.target.value)}
                             required
                             icon={newTaxType === 'percentage' ? <Percent size={18} /> : <DollarSign size={18} />}
                         />

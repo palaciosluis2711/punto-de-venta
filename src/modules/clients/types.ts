@@ -14,4 +14,6 @@ export interface Client {
     address: string;
     isLargeTaxpayer: boolean;
     isDefault?: boolean;
+    createdAt?: string;
+    storeId?: string;
 }

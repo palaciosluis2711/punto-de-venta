@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useSales } from './hooks/useSales';
+import { useInventory } from '../inventory/hooks/useInventory';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
 import { Modal } from '../../shared/components/Modal';
@@ -8,9 +9,11 @@ import type { Sale } from './types';
 import { PostSaleView } from '../pos/components/PostSaleView';
 import { useToast } from '../../shared/components/Toast/useToast';
 import './SalesPage.css';
+import { CustomSelect } from '../../shared/components/CustomSelect';
 
 export const SalesPage: React.FC = () => {
     const { sales } = useSales();
+    const { products } = useInventory();
     const { showToast } = useToast();
     const [viewingSale, setViewingSale] = useState<Sale | null>(null);
     const [ticketViewSale, setTicketViewSale] = useState<Sale | null>(null);
@@ -99,55 +102,55 @@ export const SalesPage: React.FC = () => {
                         <Input 
                             placeholder="Buscar por ID..." 
                             value={filterId} 
-                            onChange={e => setFilterId(e.target.value)} 
+                            onChange={(e: any) => setFilterId(e.target.value)} 
                         />
                     </div>
                     <div className="filter-group">
                         <label>Cliente</label>
-                        <select 
+                        <CustomSelect 
                             className="filter-select"
                             value={filterClient}
-                            onChange={e => setFilterClient(e.target.value)}
+                            onChange={(e: any) => setFilterClient(e.target.value)}
                         >
                             <option value="">Todos los clientes</option>
                             {uniqueClients.map(client => (
                                 <option key={client} value={client}>{client}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div className="filter-group">
                         <label>Fecha</label>
                         <Input 
                             type="date" 
                             value={filterDate} 
-                            onChange={e => setFilterDate(e.target.value)} 
+                            onChange={(e: any) => setFilterDate(e.target.value)} 
                         />
                     </div>
                     <div className="filter-group">
                         <label>Tienda</label>
-                        <select 
+                        <CustomSelect 
                             className="filter-select"
                             value={filterStore}
-                            onChange={e => setFilterStore(e.target.value)}
+                            onChange={(e: any) => setFilterStore(e.target.value)}
                         >
                             <option value="">Todas las tiendas</option>
                             {uniqueStores.map(store => (
                                 <option key={store} value={store}>{store}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div className="filter-group">
                         <label>Método de Pago</label>
-                        <select 
+                        <CustomSelect 
                             className="filter-select"
                             value={filterPayment}
-                            onChange={e => setFilterPayment(e.target.value)}
+                            onChange={(e: any) => setFilterPayment(e.target.value)}
                         >
                             <option value="">Todos los métodos</option>
                             {uniquePayments.map(payment => (
                                 <option key={payment} value={payment}>{payment}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div className="filter-group filter-actions">
                         <Button variant="outline" onClick={clearFilters}>Limpiar</Button>
@@ -166,57 +169,70 @@ export const SalesPage: React.FC = () => {
                                 <th>Tienda</th>
                                 <th>Método de Pago</th>
                                 <th className="table-cell-right">Total</th>
+                                <th className="table-cell-right">Ganancia</th>
                                 <th className="table-cell-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {sales.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                                         No hay ventas registradas.
                                     </td>
                                 </tr>
                             ) : filteredSales.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                                         No se encontraron ventas que coincidan con los filtros.
                                     </td>
                                 </tr>
                             ) : (
-                                filteredSales.map((sale) => (
-                                    <tr
-                                        key={sale.id}
-                                        onClick={() => setViewingSale(sale)}
-                                        className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                    >
-                                        <td>{new Date(sale.date).toLocaleString()}</td>
-                                        <td style={{ fontWeight: 500 }}>{sale.clientName}</td>
-                                        <td>
-                                            <span className="badge-store">
-                                                {sale.storeName}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="badge-payment">
-                                                {sale.paymentMethod}
-                                            </span>
-                                        </td>
-                                        <td className="table-cell-right" style={{ fontWeight: 500 }}>
-                                            ${sale.total.toFixed(2)}
-                                        </td>
-                                        <td className="table-cell-center" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex justify-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    icon={<Eye size={16} />}
-                                                    title="Ver Detalles"
-                                                    onClick={() => setViewingSale(sale)}
-                                                />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                filteredSales.map((sale) => {
+                                    // Calculate total cost
+                                    const totalCost = sale.items.reduce((acc, item) => {
+                                        const cost = item.unitCost ?? (products.find(p => p.id === item.productId)?.cost || 0);
+                                        return acc + (cost * item.quantity);
+                                    }, 0);
+                                    const estimatedProfit = sale.total - totalCost;
+
+                                    return (
+                                        <tr
+                                            key={sale.id}
+                                            onClick={() => setViewingSale(sale)}
+                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                        >
+                                            <td>{new Date(sale.date).toLocaleString()}</td>
+                                            <td style={{ fontWeight: 500 }}>{sale.clientName}</td>
+                                            <td>
+                                                <span className="badge-store">
+                                                    {sale.storeName}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className="badge-payment">
+                                                    {sale.paymentMethod}
+                                                </span>
+                                            </td>
+                                            <td className="table-cell-right" style={{ fontWeight: 500 }}>
+                                                ${sale.total.toFixed(2)}
+                                            </td>
+                                            <td className="table-cell-right" style={{ fontWeight: 500, color: estimatedProfit >= 0 ? 'var(--success)' : 'var(--destructive)' }}>
+                                                ${estimatedProfit.toFixed(2)}
+                                            </td>
+                                            <td className="table-cell-center" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex justify-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        icon={<Eye size={16} />}
+                                                        title="Ver Detalles"
+                                                        onClick={() => setViewingSale(sale)}
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

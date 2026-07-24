@@ -12,6 +12,7 @@ import { Image as ImageIcon, Upload, X, Plus, Trash2, RefreshCw } from 'lucide-r
 
 import { ProductSelectionModal } from './ProductSelectionModal';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 interface ProductFormProps {
     initialData?: Product;
@@ -502,7 +503,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleImageChange}
+                                    onChange={(val: any) => handleImageChange(val.target ? val : { target: { value: val } } as any)}
                                     style={{
                                         position: 'absolute',
                                         top: 0,
@@ -538,7 +539,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                         type="checkbox"
                         id="isSpecial"
                         checked={isSpecial}
-                        onChange={(e) => {
+                        onChange={(e: any) => {
                             setIsSpecial(e.target.checked);
                             // Reset associated products if turning off
                             if (!e.target.checked) {
@@ -561,7 +562,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                     label="Nombre del Producto"
                     name="name"
                     value={formData.name}
-                    onChange={handleChange}
+                    onChange={(val: any) => handleChange(val.target ? val : { target: { value: val } } as any)}
                     placeholder="Ej. Cuaderno Profesional"
                     required
                     error={errors.name}
@@ -584,7 +585,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                     <Input
                         name="barcode"
                         value={formData.barcode}
-                        onChange={handleChange}
+                        onChange={(val: any) => handleChange(val.target ? val : { target: { value: val } } as any)}
                         placeholder="Escanea o escribe..."
                         required
                         error={errors.barcode}
@@ -593,10 +594,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                 <div className="input-wrapper">
                     <label className="input-label">Categoría</label>
                     <div className="input-container">
-                        <select
+                        <CustomSelect
                             name="category"
                             value={formData.category}
-                            onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                            onChange={(e: any) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                             className="input-field"
                             required
                         >
@@ -604,7 +605,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                             {categories.map(cat => (
                                 <option key={cat.id} value={cat.name}>{cat.name}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                 </div>
             </div>
@@ -616,7 +617,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                         label="Precio Venta"
                         name="price"
                         value={formData.price}
-                        onChange={handleChange}
+                        onChange={(val: any) => handleChange(val.target ? val : { target: { value: val } } as any)}
                         placeholder="0.00"
                         min="0"
                         step="0.01"
@@ -639,7 +640,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                             label="Costo"
                             name="cost"
                             value={formData.cost}
-                            onChange={handleChange}
+                            onChange={(val: any) => handleChange(val.target ? val : { target: { value: val } } as any)}
                             placeholder="0.00"
                             min="0"
                             step="0.01"
@@ -657,7 +658,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                             label="Cantidad Alerta"
                             name="minStock"
                             value={formData.minStock === 0 ? '' : formData.minStock} // Show empty if 0
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 // Handle empty value by setting to 0, logic in value prop handles display
                                 const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                 setFormData(prev => ({
@@ -698,7 +699,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                                         <input
                                             type="checkbox"
                                             checked={isChecked}
-                                            onChange={(e) => {
+                                            onChange={(e: any) => {
                                                 const currentTaxes = formData.taxes || [];
                                                 const newTaxes = e.target.checked 
                                                     ? [...currentTaxes, { id: tax.id, method: 'inclusive' as const }]
@@ -715,10 +716,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                                         </div>
                                     </label>
                                     {isChecked && (
-                                        <select
+                                        <CustomSelect
                                             style={{ fontSize: '0.75rem', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
                                             value={appliedTax.method}
-                                            onChange={(e) => {
+                                            onChange={(e: any) => {
                                                 const method = e.target.value as 'inclusive' | 'exclusive';
                                                 const newTaxes = (formData.taxes || []).map(t => t.id === tax.id ? { ...t, method } : t);
                                                 setFormData(prev => ({ ...prev, taxes: newTaxes }));
@@ -726,7 +727,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                                         >
                                             <option value="inclusive">Inclusivo</option>
                                             <option value="exclusive">Exclusivo</option>
-                                        </select>
+                                        </CustomSelect>
                                     )}
                                 </div>
                             );
@@ -738,17 +739,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
             <div className="input-wrapper">
                 <label className="input-label">Marca (Opcional)</label>
                 <div className="input-container">
-                    <select
+                    <CustomSelect
                         name="brand"
                         value={formData.brand || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
                         className="input-field"
                     >
                         <option value="">Seleccionar...</option>
                         {brands.map(brand => (
                             <option key={brand.id} value={brand.name}>{brand.name}</option>
                         ))}
-                    </select>
+                    </CustomSelect>
                 </div>
             </div>
 
@@ -756,10 +757,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                 <div className="input-wrapper">
                     <label className="input-label">Unidad de Medida (Opcional)</label>
                     <div className="input-container">
-                        <select
+                        <CustomSelect
                             name="unit"
                             value={formData.unit || ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
+                            onChange={(e: any) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
                             className="input-field"
                         >
                             <option value="">Seleccionar...</option>
@@ -768,7 +769,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit,
                                 .map(unit => (
                                     <option key={unit.id} value={unit.name}>{unit.name} ({unit.abbreviation})</option>
                                 ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                 </div>
             </div>

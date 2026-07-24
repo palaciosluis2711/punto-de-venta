@@ -4,6 +4,7 @@ import { Modal } from '../../../shared/components/Modal';
 import { Button } from '../../../shared/components/Button';
 import type { Product } from '../../inventory/types';
 import type { Store as StoreType } from '../../settings/hooks/useStores';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 export interface MissingStockItem {
     product: Product;
@@ -101,7 +102,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
         const resolutions: MissingItemResolution[] = missingItems.map(item => {
             const sourceStoreId = selections[item.product.id] || '';
             let transferredQuantity = item.missingQuantity;
-            
+
             if (sourceStoreId) {
                 const sourceStock = item.product.inventory?.[sourceStoreId] || 0;
                 transferredQuantity = Math.min(item.missingQuantity, sourceStock);
@@ -126,18 +127,18 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
             onClose={onCancel}
             title="⚠️ Advertencia de Inventario"
         >
-            <div style={{ padding: '0 0 1rem 0' }}>
-                <p style={{ marginBottom: '1.5rem', lineHeight: 1.5, color: 'var(--muted-foreground)' }}>
+            <div style={{ padding: '0 0 0rem 0' }}>
+                <p style={{ marginBottom: '1rem', marginTop: '0rem', lineHeight: 1.2, color: 'var(--muted-foreground)' }}>
                     Algunos productos agregados al carrito no están disponibles en esta tienda.
                     Por favor, selecciona desde qué sucursal deseas transferir los productos faltantes.
                 </p>
 
                 <div style={{ padding: '1rem', backgroundColor: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <input 
-                        type="checkbox" 
-                        id="no-transfer" 
-                        checked={noTransfer} 
-                        onChange={(e) => setNoTransfer(e.target.checked)} 
+                    <input
+                        type="checkbox"
+                        id="no-transfer"
+                        checked={noTransfer}
+                        onChange={(e: any) => setNoTransfer(e.target.checked)}
                         style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer', accentColor: 'var(--primary)' }}
                     />
                     <label htmlFor="no-transfer" style={{ fontWeight: 500, cursor: 'pointer', margin: 0, color: 'var(--text-primary)' }}>
@@ -145,7 +146,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                     </label>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '50vh', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'visible', paddingBottom: '1rem' }}>
                     {missingItems.map((item, index) => {
                         const availableStores = stores.filter(s => s.id !== activeStoreId);
 
@@ -154,7 +155,9 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                 padding: '1rem',
                                 border: '1px solid var(--border)',
                                 borderRadius: 'var(--radius-md)',
-                                backgroundColor: 'var(--surface)'
+                                backgroundColor: 'var(--surface)',
+                                position: 'relative',
+                                zIndex: missingItems.length - index
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                     <h4 style={{ margin: 0, fontWeight: 600, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -173,10 +176,10 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                     <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <Store size={14} /> Transferir desde:
                                     </label>
-                                    <select
+                                    <CustomSelect
                                         className="input-field"
                                         value={selections[item.product.id] || ''}
-                                        onChange={(e) => handleSelectionChange(item.product.id, e.target.value)}
+                                        onChange={(e: any) => handleSelectionChange(item.product.id, e.target.value)}
                                         style={{ borderColor: !selections[item.product.id] && !noTransfer ? 'var(--danger)' : 'var(--border)' }}
                                         disabled={noTransfer}
                                     >
@@ -189,7 +192,7 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                                                 </option>
                                             );
                                         })}
-                                    </select>
+                                    </CustomSelect>
                                     {!selections[item.product.id] && !noTransfer && (
                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--danger)' }}>
                                             Ninguna tienda tiene stock suficiente, la venta dejará el inventario en 0.
@@ -205,7 +208,10 @@ export const PosStockWarningModal: React.FC<PosStockWarningModalProps> = ({
                     <Button variant="outline" onClick={onCancel}>
                         Cancelar
                     </Button>
-                    <Button onClick={handleProceed}>
+                    <Button 
+                        onClick={handleProceed}
+                        disabled={!noTransfer && missingItems.some(item => !selections[item.product.id])}
+                    >
                         Proceder
                     </Button>
                 </div>

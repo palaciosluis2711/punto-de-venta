@@ -10,6 +10,7 @@ import { Plus, ShoppingBag, Eye, Printer, RotateCcw, Edit, Filter, Copy } from '
 import type { Purchase } from './types';
 import { useToast } from '../../shared/components/Toast/useToast';
 import './PurchasesPage.css';
+import { CustomSelect } from '../../shared/components/CustomSelect';
 
 export const PurchasesPage: React.FC = () => {
     const { purchases, updatePurchase } = usePurchases();
@@ -156,7 +157,7 @@ export const PurchasesPage: React.FC = () => {
                             <Input 
                                 placeholder="Buscar ID..." 
                                 value={filterId} 
-                                onChange={e => setFilterId(e.target.value)} 
+                                onChange={(e: any) => setFilterId(e.target.value)} 
                             />
                         </div>
                         <div className="filter-group">
@@ -164,42 +165,42 @@ export const PurchasesPage: React.FC = () => {
                             <Input 
                                 type="date" 
                                 value={filterDate} 
-                                onChange={e => setFilterDate(e.target.value)} 
+                                onChange={(e: any) => setFilterDate(e.target.value)} 
                             />
                         </div>
                         <div className="filter-group">
                             <label>Estado</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterStatus}
-                                onChange={e => setFilterStatus(e.target.value)}
+                                onChange={(e: any) => setFilterStatus(e.target.value)}
                             >
                                 <option value="">Todos</option>
                                 <option value="completed">Completado</option>
                                 <option value="cancelled">Cancelado</option>
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group">
                             <label>Tienda Destino</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterStore}
-                                onChange={e => setFilterStore(e.target.value)}
+                                onChange={(e: any) => setFilterStore(e.target.value)}
                             >
                                 <option value="">Todas</option>
                                 {uniqueStores.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group">
                             <label>Proveedor</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterSupplier}
-                                onChange={e => setFilterSupplier(e.target.value)}
+                                onChange={(e: any) => setFilterSupplier(e.target.value)}
                             >
                                 <option value="">Todos</option>
                                 {uniqueSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group filter-actions">
                             <Button variant="outline" onClick={clearFilters}>Limpiar</Button>

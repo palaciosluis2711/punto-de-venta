@@ -34,7 +34,7 @@ export const SupplierTable: React.FC<SupplierTableProps> = ({
                             <input
                                 type="checkbox"
                                 checked={allSelected}
-                                onChange={(e) => onSelectAll(e.target.checked)}
+                                onChange={(e: any) => onSelectAll(e.target.checked)}
                                 style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                             />
                         </th>

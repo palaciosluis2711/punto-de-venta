@@ -15,6 +15,7 @@ export const useClients = () => {
 
     const addClient = useCallback((data: Omit<Client, 'id'>) => {
         const newClient: Client = {
+            createdAt: new Date().toISOString(),
             ...data,
             id: crypto.randomUUID()
         };

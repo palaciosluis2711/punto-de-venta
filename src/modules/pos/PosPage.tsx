@@ -309,7 +309,7 @@ export const PosPage: React.FC = () => {
 
         Object.entries(groupedBySource).forEach(([sourceStoreId, items]) => {
             const sourceStoreName = stores.find(s => s.id === sourceStoreId)?.name || 'Tienda Origen';
-            
+
             const transferItems = items.map(item => ({
                 productId: item.productId,
                 productName: item.productName,
@@ -355,7 +355,7 @@ export const PosPage: React.FC = () => {
                 }
                 return text;
             }).join('\n');
-            
+
             addNotification({
                 title: 'Transferencia Automática de Stock',
                 message: `${activeStoreName} vendió productos que no estaban disponibles en su stock, por lo que han pedido transferirlos desde esta tienda para completar la venta.\n\nLos productos transferidos fueron:\n${transferredList}`,
@@ -395,7 +395,8 @@ export const PosPage: React.FC = () => {
                 quantity: item.quantity,
                 unitPrice: item.price,
                 subtotal: item.price * item.quantity,
-                isSpecialPrice: item.isSpecialPrice
+                isSpecialPrice: item.isSpecialPrice,
+                unitCost: item.cost
             })),
             paymentMethod: data.paymentMethod,
             clientName: selectedClient ? selectedClient.fullName : 'Cliente General',
@@ -462,7 +463,7 @@ export const PosPage: React.FC = () => {
                 setSelectedClient({ ...data, id: editingClient.id });
             }
         } else {
-            addClient(data);
+            addClient({ ...data, storeId: activeStoreId });
             // Note: We can't auto-select here easily without knowing the new ID immediately,
             // but the user can search for it immediately.
         }
@@ -471,15 +472,15 @@ export const PosPage: React.FC = () => {
 
 
     return (
-        <div className="pos-layout animate-in fade-in duration-300">
-            <div className="pos-main">
-                <div className="pos-search-bar" style={{ display: 'flex', gap: '1rem' }}>
+        <div className="pos-layout animate-in fade-in duration-300" style={{ paddingTop: '0.625rem' }}>
+            <div className="pos-main" style={{ paddingTop: '2.5rem' }}>
+                <div className="pos-search-bar" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ flex: 1 }}>
                         <Input
                             placeholder="Buscar producto por nombre o código de barras..."
                             icon={<Search size={20} />}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e: any) => setSearchQuery(e.target.value)}
                             onKeyDown={handleInputKeyDown}
                             autoFocus
                             className="search-input-lg"
@@ -516,7 +517,7 @@ export const PosPage: React.FC = () => {
                 }}
             />
 
-            <div className="pos-sidebar" style={{ width: `${sidebarWidth}px`, display: 'flex', flexDirection: 'column' }}>
+            <div className="pos-sidebar" style={{ width: `${sidebarWidth}px`, display: 'flex', flexDirection: 'column', paddingTop: '1.5rem' }}>
                 <div style={{ padding: '1rem 1rem 0 1rem' }}>
                     <PosClientSelector
                         selectedClient={selectedClient}

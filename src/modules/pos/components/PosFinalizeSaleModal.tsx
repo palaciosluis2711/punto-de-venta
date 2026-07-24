@@ -138,7 +138,7 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
             title="Finalizar Venta"
             maxWidth="800px"
         >
-            <div className="finalize-modal-grid">
+            <div className="finalize-modal-grid" style={{ paddingTop: '0rem', paddingBottom: '0rem' }}>
                 {/* Left Column: Input Fields */}
                 <div className="finalize-col-left">
                     <div className="section-title">
@@ -168,7 +168,7 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
                         <Input
                             type="number"
                             value={receivedAmount}
-                            onChange={e => setReceivedAmount(e.target.value)}
+                            onChange={(e: any) => setReceivedAmount(e.target.value)}
                             className="input-large-text"
                             placeholder="0.00"
                         />
@@ -195,7 +195,7 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
                                 <Input
                                     type="number"
                                     value={discountValue}
-                                    onChange={e => setDiscountValue(e.target.value)}
+                                    onChange={(e: any) => setDiscountValue(e.target.value)}
                                     placeholder="0.00"
                                 />
                                 <div className="toggle-group">
@@ -223,7 +223,7 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
                                 <Input
                                     type="number"
                                     value={shippingCost}
-                                    onChange={e => setShippingCost(e.target.value)}
+                                    onChange={(e: any) => setShippingCost(e.target.value)}
                                     placeholder="0.00"
                                     style={{ paddingLeft: '2.5rem' }}
                                 />
@@ -238,19 +238,19 @@ export const PosFinalizeSaleModal: React.FC<PosFinalizeSaleModalProps> = ({
                             <Input
                                 placeholder="Nota de Venta (Visible en recibo)"
                                 value={saleNote}
-                                onChange={e => setSaleNote(e.target.value)}
+                                onChange={(e: any) => setSaleNote(e.target.value)}
                                 icon={<MessageSquare size={16} />}
                             />
                             <Input
                                 placeholder="Nota de Pago"
                                 value={paymentNote}
-                                onChange={e => setPaymentNote(e.target.value)}
+                                onChange={(e: any) => setPaymentNote(e.target.value)}
                                 icon={<Banknote size={16} />}
                             />
                             <Input
                                 placeholder="Nota Interna (Personal)"
                                 value={staffNote}
-                                onChange={e => setStaffNote(e.target.value)}
+                                onChange={(e: any) => setStaffNote(e.target.value)}
                                 icon={<User size={16} />}
                             />
                         </div>

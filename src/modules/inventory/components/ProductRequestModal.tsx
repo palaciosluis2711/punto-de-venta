@@ -6,6 +6,7 @@ import { Input } from '../../../shared/components/Input';
 import { useToast } from '../../../shared/components/Toast/useToast';
 import type { Product } from '../types';
 import type { Store as StoreType } from '../../settings/hooks/useStores';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 export interface RequestItem {
     productId: string;
@@ -162,17 +163,17 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({
                                 <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Store size={16} /> Pedir a:
                                 </label>
-                                <select
+                                <CustomSelect
                                     className="input-field"
                                     value={targetStoreId}
-                                    onChange={(e) => setTargetStoreId(e.target.value)}
+                                    onChange={(val: any) => setTargetStoreId(val.target ? val.target.value : val)}
                                     style={{ borderColor: !targetStoreId ? 'var(--error)' : 'var(--border)' }}
                                 >
                                     <option value="" disabled>Seleccione una sucursal...</option>
                                     {availableStores.map(store => (
                                         <option key={store.id} value={store.id}>{store.name}</option>
                                     ))}
-                                </select>
+                                </CustomSelect>
                             </div>
                         </div>
 
@@ -182,7 +183,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({
                                 placeholder="Buscar producto extra para añadir..."
                                 icon={<Search size={16} />}
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(val: any) => setSearchQuery(val.target ? val.target.value : val)}
                                 rightElement={
                                     searchQuery ? (
                                         <Button variant="ghost" size="sm" onClick={() => setSearchQuery('')} style={{ padding: 4 }}>
@@ -229,7 +230,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({
                             <textarea
                                 className="input-field"
                                 value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
+                                onChange={(val: any) => setNotes(val.target ? val.target.value : val)}
                                 placeholder="Ej. Reabastecimiento urgente para temporada..."
                                 style={{ resize: 'none', flex: 1 }}
                             />
@@ -300,7 +301,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({
                                                             className="input-field" 
                                                             style={{ width: '70px', padding: '0.25rem 0.5rem', textAlign: 'center', height: 'auto' }}
                                                             value={item.requestedQuantity}
-                                                            onChange={(e) => handleQuantityChange(item.productId, e.target.value)}
+                                                            onChange={(e: any) => handleQuantityChange(item.productId, e.target.value)}
                                                             onBlur={() => handleBlur(item.productId, item.requestedQuantity)}
                                                             min="1"
                                                         />

@@ -4,6 +4,7 @@ import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
 import { Building, MapPin, Mail, Phone, User, FileText } from 'lucide-react';
 import { LOCATIONS_SV } from '../../../shared/data/locations_sv';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 interface ClientFormProps {
     initialData?: Client;
@@ -97,7 +98,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                     label="Nombre Completo o Razón Social *"
                     placeholder="Ej. Juan Pérez o Empresa S.A. de C.V."
                     value={formData.fullName}
-                    onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, fullName: e.target.value })}
                     required
                     icon={<User size={18} />}
                     autoFocus
@@ -106,22 +107,22 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
                     <div className="input-wrapper">
                         <label className="input-label">Tipo Documento</label>
-                        <select
+                        <CustomSelect
                             className="input-field"
                             style={{ height: '40px', padding: '0 0.75rem' }}
                             value={formData.documentType}
-                            onChange={e => setFormData({ ...formData, documentType: e.target.value as any, documentNumber: '' })}
+                            onChange={(e: any) => setFormData({ ...formData, documentType: e.target.value as any, documentNumber: '' })}
                         >
                             <option value="DUI">DUI</option>
                             <option value="NIT">NIT</option>
                             <option value="Pasaporte">Pasaporte</option>
-                        </select>
+                        </CustomSelect>
                     </div>
                     <Input
                         label={`Número de ${formData.documentType} *`}
                         placeholder={formData.documentType === 'DUI' ? '00000000-0' : formData.documentType === 'NIT' ? '0000-000000-000-0' : 'Pasaporte'}
                         value={formData.documentNumber}
-                        onChange={e => handleDocumentChange(e.target.value)}
+                        onChange={(e: any) => handleDocumentChange(e.target.value)}
                         required
                         icon={<FileText size={18} />}
                         maxLength={formData.documentType === 'DUI' ? 10 : formData.documentType === 'NIT' ? 17 : 20}
@@ -133,14 +134,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                         label="NCR (Numérico)"
                         placeholder="Solo números"
                         value={formData.ncr}
-                        onChange={e => handleNcrChange(e.target.value)}
+                        onChange={(e: any) => handleNcrChange(e.target.value)}
                     />
                     <div className="input-wrapper" style={{ justifyContent: 'center', height: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={formData.isLargeTaxpayer}
-                                onChange={e => setFormData({ ...formData, isLargeTaxpayer: e.target.checked })}
+                                onChange={(e: any) => setFormData({ ...formData, isLargeTaxpayer: e.target.checked })}
                                 style={{ width: '16px', height: '16px' }}
                             />
                             <span className="text-sm font-medium">Retención IVA (Gran Contribuyente)</span>
@@ -183,7 +184,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                     label="Actividad Comercial"
                     placeholder="Ej. Venta de repuestos, Servicios profesionales..."
                     value={formData.commercialActivity}
-                    onChange={e => setFormData({ ...formData, commercialActivity: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, commercialActivity: e.target.value })}
                     icon={<Building size={18} />}
                 />
             </div>
@@ -196,7 +197,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                         label="Teléfono"
                         placeholder="2222-2222"
                         value={formData.phone}
-                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })}
                         icon={<Phone size={18} />}
                     />
                     <Input
@@ -204,7 +205,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                         placeholder="cliente@email.com"
                         type="email"
                         value={formData.email}
-                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
                         icon={<Mail size={18} />}
                     />
                 </div>
@@ -224,54 +225,54 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="input-wrapper">
                         <label className="input-label">Departamento</label>
-                        <select
+                        <CustomSelect
                             className="input-field"
                             style={{ height: '40px' }}
                             value={formData.department}
-                            onChange={e => setFormData({ ...formData, department: e.target.value, municipality: '', district: '' })}
+                            onChange={(e: any) => setFormData({ ...formData, department: e.target.value, municipality: '', district: '' })}
                         >
                             <option value="">Seleccionar...</option>
                             {departments.map(d => <option key={d.idMDepa} value={d.nombre}>{d.nombre}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div className="input-wrapper">
                         <label className="input-label">Municipio</label>
-                        <select
+                        <CustomSelect
                             className="input-field"
                             style={{ height: '40px' }}
                             value={formData.municipality}
-                            onChange={e => setFormData({ ...formData, municipality: e.target.value, district: '' })}
+                            onChange={(e: any) => setFormData({ ...formData, municipality: e.target.value, district: '' })}
                             disabled={!formData.department}
                         >
                             <option value="">Seleccionar...</option>
                             {municipalities.map(m => (
                                 <option key={m.nombre} value={m.nombre}>{m.nombre}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                 </div>
 
                 <div className="input-wrapper">
                     <label className="input-label">Distrito</label>
-                    <select
+                    <CustomSelect
                         className="input-field"
                         style={{ height: '40px' }}
                         value={formData.district}
-                        onChange={e => setFormData({ ...formData, district: e.target.value })}
+                        onChange={(e: any) => setFormData({ ...formData, district: e.target.value })}
                         disabled={!formData.municipality}
                     >
                         <option value="">Seleccionar...</option>
                         {districts.map(d => (
                             <option key={d.nombre} value={d.nombre}>{d.nombre}</option>
                         ))}
-                    </select>
+                    </CustomSelect>
                 </div>
 
                 <Input
                     label="Dirección de Domicilio"
                     placeholder="Colonia, Calle, # de Casa..."
                     value={formData.address}
-                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, address: e.target.value })}
                     icon={<MapPin size={18} />}
                 />
             </div>

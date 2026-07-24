@@ -2,6 +2,7 @@ import React from 'react';
 import { useToast } from '../../../shared/components/Toast/useToast';
 import { Button } from '../../../shared/components/Button';
 import { Bell } from 'lucide-react';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 export const ToastSettingsForm: React.FC = () => {
     const { settings, updateSettings, showToast } = useToast();
@@ -41,16 +42,16 @@ export const ToastSettingsForm: React.FC = () => {
                             {/* Animación */}
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Animación de Entrada</label>
-                                <select
+                                <CustomSelect
                                     className="input"
                                     value={settings.animation}
-                                    onChange={(e) => updateSettings({ ...settings, animation: e.target.value as any })}
+                                    onChange={(e: any) => updateSettings({ ...settings, animation: e.target.value as any })}
                                     style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'var(--background)', color: 'var(--text-main)' }}
                                 >
                                     <option value="slide-smooth">Deslizamiento Suave (Recomendado)</option>
                                     <option value="fade">Desvanecimiento (Fade)</option>
                                     <option value="none">Sin Animación</option>
-                                </select>
+                                </CustomSelect>
                                 <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>Elige cómo aparecerán y desaparecerán los avisos.</p>
                             </div>
 
@@ -94,7 +95,7 @@ export const ToastSettingsForm: React.FC = () => {
                                     max="1.0"
                                     step="0.05"
                                     value={settings.opacity}
-                                    onChange={(e) => updateSettings({ ...settings, opacity: parseFloat(e.target.value) })}
+                                    onChange={(e: any) => updateSettings({ ...settings, opacity: parseFloat(e.target.value) })}
                                     style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--primary)' }}
                                 />
                                 <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>Ajusta qué tan transparentes son las notificaciones.</p>

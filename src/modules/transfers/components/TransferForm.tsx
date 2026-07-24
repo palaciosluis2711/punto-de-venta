@@ -7,6 +7,7 @@ import { Input } from '../../../shared/components/Input';
 import { Search, Trash2, Save, ArrowRight } from 'lucide-react';
 import type { Product } from '../../inventory/types';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 interface TransferFormProps {
     onSubmit: (data: any) => Promise<void>;
@@ -235,7 +236,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                 label="Buscar Producto (Nombre o Código)"
                                 placeholder="Escribe para buscar..."
                                 value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
+                                onChange={(e: any) => setSearchTerm(e.target.value)}
                                 onKeyDown={handleInputKeyDown}
                                 icon={<Search size={18} />}
                                 autoFocus
@@ -311,7 +312,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                                         <input
                                                             type="number"
                                                             value={item.quantity || ''}
-                                                            onChange={(e) => {
+                                                            onChange={(e: any) => {
                                                                 const val = e.target.value === '' ? 0 : Number(e.target.value);
                                                                 handleUpdateItem(index, val);
                                                             }}
@@ -364,7 +365,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                             <input
                                 type="date"
                                 value={date}
-                                onChange={e => setDate(e.target.value)}
+                                onChange={(e: any) => setDate(e.target.value)}
                                 className="input-field"
                                 required
                             />
@@ -372,9 +373,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
 
                         <div className="sidebar-input-group">
                             <label className="sidebar-label">Tienda Origen</label>
-                            <select
+                            <CustomSelect
                                 value={sourceStoreId}
-                                onChange={e => {
+                                onChange={(e: any) => {
                                     setSourceStoreId(e.target.value);
                                     setDestinationStoreId('');
                                 }}
@@ -391,7 +392,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                         {s.name} {!isMainStore && s.id !== activeStoreId ? '(Solo Principal)' : ''}
                                     </option>
                                 ))}
-                            </select>
+                            </CustomSelect>
                         </div>
 
                         <div className="flex justify-center my-2 text-muted">
@@ -400,9 +401,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
 
                         <div className="sidebar-input-group">
                             <label className="sidebar-label">Tienda Destino</label>
-                            <select
+                            <CustomSelect
                                 value={destinationStoreId}
-                                onChange={e => setDestinationStoreId(e.target.value)}
+                                onChange={(e: any) => setDestinationStoreId(e.target.value)}
                                 className="input-field"
                                 required
                                 disabled={!sourceStoreId}
@@ -415,7 +416,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, onCancel, 
                                         {s.name}
                                     </option>
                                 ))}
-                            </select>
+                            </CustomSelect>
                         </div>
                     </div>
 

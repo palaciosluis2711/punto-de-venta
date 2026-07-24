@@ -10,6 +10,7 @@ import { Plus, ArrowRightLeft, Eye, Printer, RotateCcw, Edit, Filter, Copy } fro
 import type { Transfer } from './types';
 import { useToast } from '../../shared/components/Toast/useToast';
 import './TransfersPage.css';
+import { CustomSelect } from '../../shared/components/CustomSelect';
 
 const TransferNotes: React.FC<{ notes?: string }> = ({ notes }) => {
     const hasNotes = !!notes && notes.trim().length > 0;
@@ -233,7 +234,7 @@ export const TransfersPage: React.FC = () => {
                             <Input 
                                 placeholder="Buscar ID..." 
                                 value={filterId} 
-                                onChange={e => setFilterId(e.target.value)} 
+                                onChange={(e: any) => setFilterId(e.target.value)} 
                             />
                         </div>
                         <div className="filter-group">
@@ -241,42 +242,42 @@ export const TransfersPage: React.FC = () => {
                             <Input 
                                 type="date" 
                                 value={filterDate} 
-                                onChange={e => setFilterDate(e.target.value)} 
+                                onChange={(e: any) => setFilterDate(e.target.value)} 
                             />
                         </div>
                         <div className="filter-group">
                             <label>Estado</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterStatus}
-                                onChange={e => setFilterStatus(e.target.value)}
+                                onChange={(e: any) => setFilterStatus(e.target.value)}
                             >
                                 <option value="">Todos</option>
                                 <option value="completed">Completado</option>
                                 <option value="cancelled">Cancelado</option>
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group">
                             <label>Origen</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterSource}
-                                onChange={e => setFilterSource(e.target.value)}
+                                onChange={(e: any) => setFilterSource(e.target.value)}
                             >
                                 <option value="">Todos</option>
                                 {uniqueSources.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group">
                             <label>Destino</label>
-                            <select 
+                            <CustomSelect 
                                 className="filter-select"
                                 value={filterDestination}
-                                onChange={e => setFilterDestination(e.target.value)}
+                                onChange={(e: any) => setFilterDestination(e.target.value)}
                             >
                                 <option value="">Todos</option>
                                 {uniqueDestinations.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="filter-group filter-actions">
                             <Button variant="outline" onClick={clearFilters}>Limpiar</Button>

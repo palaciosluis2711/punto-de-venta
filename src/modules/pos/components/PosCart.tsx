@@ -130,7 +130,7 @@ export const PosCart: React.FC<PosCartProps> = ({
 
     return (
         <div className="pos-cart-container">
-            <div className="pos-cart-header">
+            <div className="pos-cart-header" style={{ paddingTop: '1rem', paddingBottom: '1rem' }}>
                 <h2>Carrito de Compra</h2>
                 <span className="item-count">{cart.length} items</span>
             </div>
@@ -141,7 +141,7 @@ export const PosCart: React.FC<PosCartProps> = ({
                         key={item.id}
                         className="cart-item"
                     >
-                        <div 
+                        <div
                             className="cart-item-info"
                             onContextMenu={(e) => {
                                 e.preventDefault();
@@ -249,12 +249,12 @@ export const PosCart: React.FC<PosCartProps> = ({
                             <button className="qty-btn" onClick={() => onUpdateQuantity(item.id, -1)} disabled={item.quantity <= 1}><Minus size={14} /></button>
                             <input
                                 type="number" className="qty-input" value={item.quantity || ''}
-                                onChange={(e) => { 
+                                onChange={(e: any) => {
                                     if (e.target.value === '') {
                                         onSetQuantity(item.id, 0);
                                     } else {
-                                        const val = parseInt(e.target.value); 
-                                        if (!isNaN(val)) onSetQuantity(item.id, val); 
+                                        const val = parseInt(e.target.value);
+                                        if (!isNaN(val)) onSetQuantity(item.id, val);
                                     }
                                 }}
                                 onBlur={() => { if (!item.quantity || item.quantity < 1) onSetQuantity(item.id, 1); }}
@@ -273,8 +273,8 @@ export const PosCart: React.FC<PosCartProps> = ({
                 )}
             </div>
 
-            <div className="pos-cart-footer">
-                <div className="cart-summary-row"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
+            <div className="pos-cart-footer" style={{ paddingTop: '0.8rem', paddingBottom: '0.5rem' }}>
+                <div className="cart-summary-row" style={{ marginBottom: '0rem' }}><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
                 <div className="cart-summary-row total"><span>Total</span><span>${total.toFixed(2)}</span></div>
                 <Button className="checkout-btn" size="lg" disabled={cart.length === 0} onClick={onCheckout} icon={<CreditCard size={20} />}>Cobrar</Button>
             </div>

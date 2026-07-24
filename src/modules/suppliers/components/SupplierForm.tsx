@@ -103,7 +103,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                 label="Nombre o Razón Social *"
                 placeholder="Ej. Distribuidora Papelera"
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
                 required
                 icon={<Building size={18} />}
             />
@@ -113,7 +113,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                     label="URL del Logo"
                     placeholder="https://..."
                     value={formData.image}
-                    onChange={e => setFormData({ ...formData, image: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, image: e.target.value })}
                     icon={<Image size={18} />}
                 />
                 <div className="input-wrapper">
@@ -124,7 +124,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                             accept="image/*"
                             className="input-field"
                             style={{ padding: '0.4rem' }}
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                     const reader = new FileReader();
@@ -159,7 +159,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                 label="Dirección"
                 placeholder="Calle, Número, Ciudad"
                 value={formData.address}
-                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, address: e.target.value })}
                 icon={<MapPin size={18} />}
             />
 
@@ -169,7 +169,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                     type="email"
                     placeholder="contacto@empresa.com"
                     value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
                     icon={<Mail size={18} />}
                 />
 
@@ -178,7 +178,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
                     type="tel"
                     placeholder="55 1234 5678"
                     value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })}
                     icon={<Phone size={18} />}
                 />
             </div>

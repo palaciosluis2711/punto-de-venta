@@ -99,7 +99,7 @@ export const PaymentMethodsSettings: React.FC = () => {
                             label="Nuevo Método de Pago"
                             placeholder="Ej. Cheque, Bitcoin..."
                             value={newName}
-                            onChange={e => setNewName(e.target.value)}
+                            onChange={(e: any) => setNewName(e.target.value)}
                         />
                     </div>
                     <div className="form-submit-wrapper">
@@ -121,7 +121,7 @@ export const PaymentMethodsSettings: React.FC = () => {
                         <Input
                             label="Nombre"
                             value={editingMethod.name}
-                            onChange={e => setEditingMethod({ ...editingMethod, name: e.target.value })}
+                            onChange={(e: any) => setEditingMethod({ ...editingMethod, name: e.target.value })}
                             required
                         />
                         <div className="modal-actions">

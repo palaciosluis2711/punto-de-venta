@@ -182,7 +182,7 @@ export const CategoriesSettings: React.FC = () => {
                             label="Nombre"
                             placeholder="Nueva categoría..."
                             value={newName}
-                            onChange={e => setNewName(e.target.value)}
+                            onChange={(e: any) => setNewName(e.target.value)}
                         />
                     </div>
                     <div className="form-input-group large">
@@ -190,7 +190,7 @@ export const CategoriesSettings: React.FC = () => {
                             label="Descripción (Opcional)"
                             placeholder="Breve descripción..."
                             value={newDescription}
-                            onChange={e => setNewDescription(e.target.value)}
+                            onChange={(e: any) => setNewDescription(e.target.value)}
                         />
                     </div>
                     <div className="form-submit-wrapper">
@@ -215,13 +215,13 @@ export const CategoriesSettings: React.FC = () => {
                         <Input
                             label="Nombre"
                             value={editingCategory.name}
-                            onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                            onChange={(e: any) => setEditingCategory({ ...editingCategory, name: e.target.value })}
                             required
                         />
                         <Input
                             label="Descripción"
                             value={editingCategory.description || ''}
-                            onChange={e => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                            onChange={(e: any) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                         />
                         <div className="modal-actions">
                             <Button type="button" variant="outline" onClick={() => {

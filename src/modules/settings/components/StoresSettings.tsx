@@ -225,7 +225,7 @@ export const StoresSettings: React.FC = () => {
                             label="Nombre de la Tienda *"
                             placeholder="Ej. Sucursal Centro"
                             value={newName}
-                            onChange={e => setNewName(e.target.value)}
+                            onChange={(e: any) => setNewName(e.target.value)}
                             required
                         />
                     </div>
@@ -234,7 +234,7 @@ export const StoresSettings: React.FC = () => {
                             label="Dirección"
                             placeholder="Calle, Número, Colonia..."
                             value={newAddress}
-                            onChange={e => setNewAddress(e.target.value)}
+                            onChange={(e: any) => setNewAddress(e.target.value)}
                         />
                     </div>
                     <div className="form-input-group">
@@ -242,7 +242,7 @@ export const StoresSettings: React.FC = () => {
                             label="Teléfono"
                             placeholder="Teléfono de contacto"
                             value={newPhone}
-                            onChange={e => setNewPhone(e.target.value)}
+                            onChange={(e: any) => setNewPhone(e.target.value)}
                         />
                     </div>
                     <div className="form-checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
@@ -250,7 +250,7 @@ export const StoresSettings: React.FC = () => {
                             type="checkbox"
                             id="isMainStore"
                             checked={isMain}
-                            onChange={e => setIsMain(e.target.checked)}
+                            onChange={(e: any) => setIsMain(e.target.checked)}
                             style={{ width: '1.25em', height: '1.25em', accentColor: 'var(--primary)' }}
                         />
                         <label htmlFor="isMainStore" style={{ fontWeight: 500, color: 'var(--text-main)' }}>Establecer como Tienda Principal</label>
@@ -277,18 +277,18 @@ export const StoresSettings: React.FC = () => {
                         <Input
                             label="Nombre"
                             value={editingStore.name}
-                            onChange={e => setEditingStore({ ...editingStore, name: e.target.value })}
+                            onChange={(e: any) => setEditingStore({ ...editingStore, name: e.target.value })}
                             required
                         />
                         <Input
                             label="Dirección"
                             value={editingStore.address || ''}
-                            onChange={e => setEditingStore({ ...editingStore, address: e.target.value })}
+                            onChange={(e: any) => setEditingStore({ ...editingStore, address: e.target.value })}
                         />
                         <Input
                             label="Teléfono"
                             value={editingStore.phone || ''}
-                            onChange={e => setEditingStore({ ...editingStore, phone: e.target.value })}
+                            onChange={(e: any) => setEditingStore({ ...editingStore, phone: e.target.value })}
                         />
 
                         <div className="form-checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginBottom: '1rem' }}>
@@ -297,7 +297,7 @@ export const StoresSettings: React.FC = () => {
                                 id="editIsMainStore"
                                 checked={editingStore.isDefault}
                                 disabled={stores.find(s => s.id === editingStore.id)?.isDefault} // Disable if ALREADY default (saved state)
-                                onChange={e => setEditingStore({ ...editingStore, isDefault: e.target.checked })}
+                                onChange={(e: any) => setEditingStore({ ...editingStore, isDefault: e.target.checked })}
                                 style={{ width: '1.25em', height: '1.25em', accentColor: 'var(--primary)' }}
                             />
                             <label

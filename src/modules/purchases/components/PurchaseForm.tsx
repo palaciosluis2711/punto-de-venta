@@ -8,6 +8,7 @@ import { Input } from '../../../shared/components/Input';
 import { Search, Trash2, Save } from 'lucide-react';
 import type { Product } from '../../inventory/types';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
+import { CustomSelect } from '../../../shared/components/CustomSelect';
 
 interface PurchaseFormProps {
     onSubmit: (data: any) => Promise<void>;
@@ -229,7 +230,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                 label="Buscar Producto (Nombre o Código)"
                                 placeholder="Escribe para buscar..."
                                 value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
+                                onChange={(e: any) => setSearchTerm(e.target.value)}
                                 onKeyDown={handleInputKeyDown}
                                 icon={<Search size={18} />}
                                 autoFocus
@@ -283,7 +284,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                                     <input
                                                         type="number"
                                                         value={item.quantity || ''}
-                                                        onChange={(e) => {
+                                                        onChange={(e: any) => {
                                                             const val = e.target.value === '' ? 0 : Number(e.target.value);
                                                             handleUpdateItem(index, 'quantity', val);
                                                         }}
@@ -301,7 +302,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                                     <input
                                                         type="number"
                                                         value={item.unitCost}
-                                                        onChange={(e) => handleUpdateItem(index, 'unitCost', Number(e.target.value))}
+                                                        onChange={(e: any) => handleUpdateItem(index, 'unitCost', Number(e.target.value))}
                                                         min="0"
                                                         step="0.01"
                                                         className="input-field text-right"
@@ -338,7 +339,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                             <input
                                 type="date"
                                 value={date}
-                                onChange={e => setDate(e.target.value)}
+                                onChange={(e: any) => setDate(e.target.value)}
                                 className="input-field"
                                 required
                             />
@@ -346,9 +347,9 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
 
                         <div className="sidebar-input-group">
                             <label className="sidebar-label">Proveedor</label>
-                            <select
+                            <CustomSelect
                                 value={supplierId}
-                                onChange={e => setSupplierId(e.target.value)}
+                                onChange={(e: any) => setSupplierId(e.target.value)}
                                 className="input-field"
                                 required
                             >
@@ -356,14 +357,14 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                 {suppliers.map(s => (
                                     <option key={s.id} value={s.id}>{s.name}</option>
                                 ))}
-                            </select>
+                            </CustomSelect>
                         </div>
 
                         <div className="sidebar-input-group">
                             <label className="sidebar-label">Tienda Destino</label>
-                            <select
+                            <CustomSelect
                                 value={storeId}
-                                onChange={e => setStoreId(e.target.value)}
+                                onChange={(e: any) => setStoreId(e.target.value)}
                                 className="input-field"
                                 required
                             >
@@ -377,7 +378,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, onCancel, 
                                         {s.name} {!isMainStore && s.id !== activeStoreId ? '(Solo Principal)' : ''}
                                     </option>
                                 ))}
-                            </select>
+                            </CustomSelect>
                         </div>
                     </div>
 

@@ -89,7 +89,7 @@ export const TicketSettings: React.FC = () => {
                                 <label className="block text-sm font-medium mb-1">Nombre de la Tienda</label>
                                 <Input
                                     value={settings.storeName}
-                                    onChange={(e) => updateSettings({ storeName: e.target.value })}
+                                    onChange={(e: any) => updateSettings({ storeName: e.target.value })}
                                     placeholder="Ej. Papelería El Lápiz"
                                 />
                             </div>
@@ -99,7 +99,7 @@ export const TicketSettings: React.FC = () => {
                                     <label className="block text-sm font-medium mb-1">NIT</label>
                                     <Input
                                         value={settings.nit}
-                                        onChange={(e) => updateSettings({ nit: e.target.value })}
+                                        onChange={(e: any) => updateSettings({ nit: e.target.value })}
                                         placeholder="NIT"
                                     />
                                 </div>
@@ -107,7 +107,7 @@ export const TicketSettings: React.FC = () => {
                                     <label className="block text-sm font-medium mb-1">NRC</label>
                                     <Input
                                         value={settings.nrc}
-                                        onChange={(e) => updateSettings({ nrc: e.target.value })}
+                                        onChange={(e: any) => updateSettings({ nrc: e.target.value })}
                                         placeholder="NRC"
                                     />
                                 </div>
@@ -118,7 +118,7 @@ export const TicketSettings: React.FC = () => {
                                 <label className="block text-sm font-medium mb-1">Dirección</label>
                                 <Input
                                     value={settings.address}
-                                    onChange={(e) => updateSettings({ address: e.target.value })}
+                                    onChange={(e: any) => updateSettings({ address: e.target.value })}
                                     placeholder="Calle, Número, Colonia, Ciudad"
                                 />
                             </div>
@@ -128,7 +128,7 @@ export const TicketSettings: React.FC = () => {
                                 <label className="block text-sm font-medium mb-1">Teléfono</label>
                                 <Input
                                     value={settings.phone}
-                                    onChange={(e) => updateSettings({ phone: e.target.value })}
+                                    onChange={(e: any) => updateSettings({ phone: e.target.value })}
                                     placeholder="Teléfono"
                                 />
                             </div>
@@ -137,7 +137,7 @@ export const TicketSettings: React.FC = () => {
                                 <label className="block text-sm font-medium mb-1">Sitio Web / Redes</label>
                                 <Input
                                     value={settings.website}
-                                    onChange={(e) => updateSettings({ website: e.target.value })}
+                                    onChange={(e: any) => updateSettings({ website: e.target.value })}
                                     placeholder="facebook.com/papeleria"
                                 />
                             </div>
@@ -147,7 +147,7 @@ export const TicketSettings: React.FC = () => {
                                 <label className="block text-sm font-medium mb-1">Mensaje Pie de Página</label>
                                 <Input
                                     value={settings.footerMessage}
-                                    onChange={(e) => updateSettings({ footerMessage: e.target.value })}
+                                    onChange={(e: any) => updateSettings({ footerMessage: e.target.value })}
                                     placeholder="Mensaje al final del ticket (ej. ¡Gracias por su compra!)"
                                 />
                             </div>
@@ -248,7 +248,7 @@ export const TicketSettings: React.FC = () => {
                                                 type="checkbox"
                                                 style={{ display: 'none' }}
                                                 checked={settings.showLogo}
-                                                onChange={(e) => updateSettings({ showLogo: e.target.checked })}
+                                                onChange={(e: any) => updateSettings({ showLogo: e.target.checked })}
                                             />
                                             <div className={`toggle-track ${settings.showLogo ? 'active' : ''}`}>
                                                 <div className="toggle-thumb"></div>
@@ -263,7 +263,7 @@ export const TicketSettings: React.FC = () => {
                                                 type="checkbox"
                                                 style={{ display: 'none' }}
                                                 checked={settings.showAddress}
-                                                onChange={(e) => updateSettings({ showAddress: e.target.checked })}
+                                                onChange={(e: any) => updateSettings({ showAddress: e.target.checked })}
                                             />
                                             <div className={`toggle-track ${settings.showAddress ? 'active' : ''}`}>
                                                 <div className="toggle-thumb"></div>
@@ -278,7 +278,7 @@ export const TicketSettings: React.FC = () => {
                                                 type="checkbox"
                                                 style={{ display: 'none' }}
                                                 checked={settings.showClient}
-                                                onChange={(e) => updateSettings({ showClient: e.target.checked })}
+                                                onChange={(e: any) => updateSettings({ showClient: e.target.checked })}
                                             />
                                             <div className={`toggle-track ${settings.showClient ? 'active' : ''}`}>
                                                 <div className="toggle-thumb"></div>

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck, ShoppingBag, ChevronDown, ArrowRightLeft, Users, CreditCard, Bell } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Settings, Store, Menu, Truck, ShoppingBag, ArrowRightLeft, Users, CreditCard, Bell, FileText } from 'lucide-react';
 import './MainLayout.css';
 
 import { useStores } from '../../modules/settings/hooks/useStores';
 import { useNotifications } from '../../modules/notifications/hooks/useNotifications';
+import { CustomSelect } from '../../shared/components/CustomSelect';
 
 export const MainLayout: React.FC = () => {
     const [isCollapsed, setIsCollapsed] = React.useState(true);
@@ -81,6 +82,11 @@ export const MainLayout: React.FC = () => {
                         <span>Ventas</span>
                     </NavLink>
 
+                    <NavLink to="/quotes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <FileText size={20} />
+                        <span>Cotizaciones</span>
+                    </NavLink>
+
                     <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${unreadCount > 0 ? 'has-unread' : ''}`}>
                         <Bell size={20} color={unreadCount > 0 ? 'var(--error)' : 'currentColor'} />
                         <span>Notificaciones</span>
@@ -105,37 +111,33 @@ export const MainLayout: React.FC = () => {
                     <div className="welcome-section">
                         <h2 className="page-title">Bienvenido</h2>
 
-                        <div className="store-selector-container">
-                            <Store size={16} className="text-muted" />
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <select
-                                    key={stores.map(s => `${s.id}-${s.name}-${s.isDefault}`).join(',')}
-                                    value={activeStoreId}
-                                    onChange={(e) => {
-                                        setActiveStore(e.target.value);
-                                        sessionStorage.setItem('flash_on_load', 'true');
-                                        const path = window.location.pathname;
-                                        if (path.includes('/transfers/new') || path.includes('/transfers/edit')) {
-                                            window.location.href = '/transfers';
-                                        } else if (path.includes('/purchases/new') || path.includes('/purchases/edit')) {
-                                            window.location.href = '/purchases';
-                                        } else {
-                                            window.location.reload();
-                                        }
-                                    }}
-                                    className="store-selector"
-                                    title={isFormActive ? "No puedes cambiar de tienda mientras editas un formulario" : "Cambiar Tienda Activa"}
-                                    disabled={isFormActive}
-                                    style={{ opacity: isFormActive ? 0.6 : 1, cursor: isFormActive ? 'not-allowed' : 'pointer' }}
-                                >
-                                    {stores.map(store => (
-                                        <option key={store.id} value={store.id}>
-                                            {store.name} {store.isDefault ? '(Principal)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown size={14} className="text-muted" style={{ position: 'absolute', right: 0, pointerEvents: 'none' }} />
-                            </div>
+                        <div className="store-selector-container-wrapper" style={{ minWidth: '200px' }}>
+                            <CustomSelect
+                                title={isFormActive ? "No puedes cambiar de tienda mientras editas un formulario" : "Cambiar Tienda Activa"}
+                                disabled={isFormActive}
+                                value={activeStoreId}
+                                onChange={(e: any) => {
+                                    const val = e?.target?.value !== undefined ? e.target.value : e;
+                                    console.log('MainLayout onChange resolved value:', val);
+                                    if (!val) return;
+                                    setActiveStore(val);
+                                    sessionStorage.setItem('flash_on_load', 'true');
+                                    const path = window.location.pathname;
+                                    if (path.includes('/transfers/new') || path.includes('/transfers/edit')) {
+                                        window.location.href = '/transfers';
+                                    } else if (path.includes('/purchases/new') || path.includes('/purchases/edit')) {
+                                        window.location.href = '/purchases';
+                                    } else {
+                                        window.location.reload();
+                                    }
+                                }}
+                                icon={<Store size={16} />}
+                                minWidth="150px"
+                                options={stores.map(store => ({
+                                    value: store.id,
+                                    label: `${store.name} ${store.isDefault ? '(Principal)' : ''}`
+                                }))}
+                            />
                         </div>
                     </div>
 
@@ -170,7 +172,7 @@ export const MainLayout: React.FC = () => {
                         </div>
                     </div>
                 </header>
-                <div className="content-area">
+                <div className="content-area" style={{ paddingTop: '0rem' }}>
                     <Outlet context={{ activeStoreId }} />
                 </div>
             </main>

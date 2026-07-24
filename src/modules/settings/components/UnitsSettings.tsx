@@ -194,7 +194,7 @@ export const UnitsSettings: React.FC = () => {
                             label="Nombre (Ej. Paquete)"
                             placeholder="Nueva unidad..."
                             value={newName}
-                            onChange={e => setNewName(e.target.value)}
+                            onChange={(e: any) => setNewName(e.target.value)}
                         />
                     </div>
                     <div className="form-input-group">
@@ -202,7 +202,7 @@ export const UnitsSettings: React.FC = () => {
                             label="Abreviatura (Ej. paq)"
                             placeholder="Abrev..."
                             value={newAbbrev}
-                            onChange={e => setNewAbbrev(e.target.value)}
+                            onChange={(e: any) => setNewAbbrev(e.target.value)}
                         />
                     </div>
                     <div className="form-checkbox-group">
@@ -211,7 +211,7 @@ export const UnitsSettings: React.FC = () => {
                                 type="checkbox"
                                 id="newIsComposite"
                                 checked={newIsComposite}
-                                onChange={e => setNewIsComposite(e.target.checked)}
+                                onChange={(e: any) => setNewIsComposite(e.target.checked)}
                                 className="checkbox-input"
                             />
                             <label htmlFor="newIsComposite" className="checkbox-label">
@@ -242,20 +242,20 @@ export const UnitsSettings: React.FC = () => {
                         <Input
                             label="Nombre"
                             value={editingUnit.name}
-                            onChange={e => setEditingUnit({ ...editingUnit, name: e.target.value })}
+                            onChange={(e: any) => setEditingUnit({ ...editingUnit, name: e.target.value })}
                             required
                         />
                         <Input
                             label="Abreviatura"
                             value={editingUnit.abbreviation || ''}
-                            onChange={e => setEditingUnit({ ...editingUnit, abbreviation: e.target.value })}
+                            onChange={(e: any) => setEditingUnit({ ...editingUnit, abbreviation: e.target.value })}
                         />
                         <div className="checkbox-wrapper">
                             <input
                                 type="checkbox"
                                 id="editIsComposite"
                                 checked={editingUnit.is_composite || false}
-                                onChange={e => setEditingUnit({ ...editingUnit, is_composite: e.target.checked })}
+                                onChange={(e: any) => setEditingUnit({ ...editingUnit, is_composite: e.target.checked })}
                                 className="checkbox-input"
                             />
                             <label htmlFor="editIsComposite" className="checkbox-label">

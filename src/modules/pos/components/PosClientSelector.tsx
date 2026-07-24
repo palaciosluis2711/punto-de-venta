@@ -121,7 +121,7 @@ export const PosClientSelector: React.FC<PosClientSelectorProps> = ({
                     }}
                     placeholder="Buscar cliente..."
                     value={query}
-                    onChange={(e) => {
+                    onChange={(e: any) => {
                         setQuery(e.target.value);
                         setIsOpen(true);
                     }}

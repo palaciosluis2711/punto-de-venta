@@ -12,6 +12,7 @@ import { Modal } from '../../shared/components/Modal';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { NotificationPriority, Notification as AppNotification } from './types';
 import './NotificationsPage.css';
+import { CustomSelect } from '../../shared/components/CustomSelect';
 
 const TransferNotes: React.FC<{ notes?: string }> = ({ notes }) => {
     const hasNotes = !!notes && notes.trim().length > 0;
@@ -216,16 +217,16 @@ export const NotificationsPage: React.FC = () => {
             </div>
 
             <div className="notifications-filters">
-                <select
+                <CustomSelect
                     className="input-field"
                     value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value as 'all' | 'unread' | 'read')}
+                    onChange={(e: any) => setFilterStatus(e.target.value as 'all' | 'unread' | 'read')}
                     style={{ width: '200px' }}
                 >
                     <option value="all">Todas las Notificaciones</option>
                     <option value="unread">No Leídas</option>
                     <option value="read">Leídas</option>
-                </select>
+                </CustomSelect>
             </div>
 
             <div className="notifications-list">
@@ -330,37 +331,37 @@ export const NotificationsPage: React.FC = () => {
                     <Input
                         label="Título del aviso"
                         value={composeTitle}
-                        onChange={(e) => setComposeTitle(e.target.value)}
+                        onChange={(val: any) => setComposeTitle(val.target ? val.target.value : val)}
                         required
                         autoFocus
                     />
 
                     <div className="input-group">
                         <label className="input-label">Destino</label>
-                        <select
+                        <CustomSelect
                             className="input-field"
                             value={composeTarget}
-                            onChange={(e) => setComposeTarget(e.target.value)}
+                            onChange={(val: any) => setComposeTarget(val.target ? val.target.value : val)}
                             required
                         >
                             <option value="all">Todas las sucursales</option>
                             {stores.filter(s => s.id !== activeStoreId).map(s => (
                                 <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
 
                     <div className="input-group">
                         <label className="input-label">Prioridad</label>
-                        <select
+                        <CustomSelect
                             className="input-field"
                             value={composePriority}
-                            onChange={(e) => setComposePriority(e.target.value as NotificationPriority)}
+                            onChange={(val: any) => setComposePriority(val.target ? val.target.value : val)}
                         >
                             <option value="low">Baja</option>
                             <option value="normal">Normal</option>
                             <option value="high">Alta (Urgente)</option>
-                        </select>
+                        </CustomSelect>
                     </div>
 
                     <div className="input-group">
@@ -368,7 +369,7 @@ export const NotificationsPage: React.FC = () => {
                         <textarea
                             className="input-field"
                             value={composeMessage}
-                            onChange={(e) => setComposeMessage(e.target.value)}
+                            onChange={(val: any) => setComposeMessage(val.target ? val.target.value : val)}
                             rows={4}
                             required
                             style={{ resize: 'vertical' }}

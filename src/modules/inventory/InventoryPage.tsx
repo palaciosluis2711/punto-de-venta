@@ -157,7 +157,7 @@ export const InventoryPage: React.FC = () => {
 
     return (
         <React.Fragment>
-            <div className="animate-in flex gap-6" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', height: '100%' }}>
+            <div className="animate-in flex gap-6" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', height: '100%', paddingTop: '0.625rem' }}>
                 <div className="flex flex-col gap-6" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflow: 'hidden', paddingRight: '0.5rem' }}>
                     <div className="flex justify-between items-center" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', flexShrink: 0 }}>
                         <div>
@@ -194,7 +194,7 @@ export const InventoryPage: React.FC = () => {
                             placeholder="Buscar por nombre o código..."
                             icon={<Search size={18} />}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e: any) => setSearchQuery(e.target.value)}
                             rightElement={
                                 searchQuery ? (
                                     <Button

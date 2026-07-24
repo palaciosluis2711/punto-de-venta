@@ -215,14 +215,14 @@ export const BrandsSettings: React.FC = () => {
                             label="Nombre *"
                             placeholder="Nueva marca..."
                             value={newName}
-                            onChange={e => setNewName(e.target.value)}
+                            onChange={(e: any) => setNewName(e.target.value)}
                             required
                         />
                         <Input
                             label="Descripción (Opcional)"
                             placeholder="Breve descripción..."
                             value={newDescription}
-                            onChange={e => setNewDescription(e.target.value)}
+                            onChange={(e: any) => setNewDescription(e.target.value)}
                         />
                     </div>
 
@@ -235,7 +235,7 @@ export const BrandsSettings: React.FC = () => {
                                     accept="image/*"
                                     className="input-field"
                                     style={{ padding: '0.4rem' }}
-                                    onChange={(e) => handleImageUpload(e)}
+                                    onChange={(e: any) => handleImageUpload(e)}
                                 />
                             </div>
                         </div>
@@ -267,13 +267,13 @@ export const BrandsSettings: React.FC = () => {
                         <Input
                             label="Nombre"
                             value={editingBrand.name}
-                            onChange={e => setEditingBrand({ ...editingBrand, name: e.target.value })}
+                            onChange={(e: any) => setEditingBrand({ ...editingBrand, name: e.target.value })}
                             required
                         />
                         <Input
                             label="Descripción"
                             value={editingBrand.description || ''}
-                            onChange={e => setEditingBrand({ ...editingBrand, description: e.target.value })}
+                            onChange={(e: any) => setEditingBrand({ ...editingBrand, description: e.target.value })}
                         />
 
                         <div className="input-wrapper">
@@ -290,7 +290,7 @@ export const BrandsSettings: React.FC = () => {
                                         accept="image/*"
                                         className="input-field"
                                         style={{ padding: '0.4rem' }}
-                                        onChange={(e) => handleImageUpload(e, true)}
+                                        onChange={(e: any) => handleImageUpload(e, true)}
                                     />
                                     {editingBrand.image && (
                                         <Button

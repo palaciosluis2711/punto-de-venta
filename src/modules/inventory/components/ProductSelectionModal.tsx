@@ -75,7 +75,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                             <Input
                                 placeholder="Buscar producto..."
                                 value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
+                                onChange={(e: any) => setSearchTerm(e.target.value)}
                                 icon={<Search size={18} />}
                                 autoFocus
                             />
@@ -128,7 +128,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                                 type="number"
                                 label="Cantidad"
                                 value={quantity}
-                                onChange={e => {
+                                onChange={(e: any) => {
                                     const newQty = Number(e.target.value);
                                     setQuantity(newQty);
                                     // Auto-update price estimate
@@ -143,7 +143,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                                 type="number"
                                 label="Precio Total en Paquete"
                                 value={bundlePrice}
-                                onChange={e => setBundlePrice(Number(e.target.value))}
+                                onChange={(e: any) => setBundlePrice(Number(e.target.value))}
                                 min={0}
                                 step={0.01}
                             />

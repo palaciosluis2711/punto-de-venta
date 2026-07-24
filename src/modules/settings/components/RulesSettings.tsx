@@ -189,7 +189,7 @@ export const RulesSettings: React.FC = () => {
                             label="Nombre de la Regla"
                             placeholder="Ej: Precio Mayorista"
                             value={name}
-                            onChange={e => setName(e.target.value)}
+                            onChange={(e: any) => setName(e.target.value)}
                             required
                         />
                     </div>
@@ -272,7 +272,7 @@ export const RulesSettings: React.FC = () => {
                                             boxShadow: 'none'
                                         }}
                                         value={currentNumber}
-                                        onChange={e => setCurrentNumber(e.target.value)}
+                                        onChange={(e: any) => setCurrentNumber(e.target.value)}
                                         onKeyDown={e => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
@@ -342,7 +342,7 @@ export const RulesSettings: React.FC = () => {
                             <input
                                 type="checkbox"
                                 checked={applyToBundles}
-                                onChange={e => setApplyToBundles(e.target.checked)}
+                                onChange={(e: any) => setApplyToBundles(e.target.checked)}
                                 style={{
                                     width: '1rem', height: '1rem', borderRadius: '0.25rem',
                                     borderColor: 'var(--border)', color: 'var(--primary)'
@@ -354,7 +354,7 @@ export const RulesSettings: React.FC = () => {
                             <input
                                 type="checkbox"
                                 checked={allowWithDiscount}
-                                onChange={e => setAllowWithDiscount(e.target.checked)}
+                                onChange={(e: any) => setAllowWithDiscount(e.target.checked)}
                                 style={{
                                     width: '1rem', height: '1rem', borderRadius: '0.25rem',
                                     borderColor: 'var(--border)', color: 'var(--primary)'

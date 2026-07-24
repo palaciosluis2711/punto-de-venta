@@ -144,7 +144,7 @@ export const SuppliersPage: React.FC = () => {
     };
 
     return (
-        <div className="animate-in flex flex-col gap-6" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto' }}>
+        <div className="animate-in flex flex-col gap-6" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', paddingTop: '0.625rem' }}>
             {/* ... Header ... */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
@@ -173,7 +173,7 @@ export const SuppliersPage: React.FC = () => {
                     placeholder="Buscar por nombre o correo..."
                     icon={<Search size={18} />}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e: any) => setSearchQuery(e.target.value)}
                 />
             </div>
 

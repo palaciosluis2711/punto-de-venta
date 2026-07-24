@@ -10,9 +10,11 @@ import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { Plus, Search, Users } from 'lucide-react';
 import type { Client } from './types';
 import { useToast } from '../../shared/components/Toast/useToast';
+import { useStores } from '../settings/hooks/useStores';
 
 export const ClientsPage: React.FC = () => {
     const { clients, addClient, updateClient, deleteClient, searchClients } = useClients();
+    const { activeStoreId } = useStores();
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const { showToast } = useToast();
@@ -41,14 +43,14 @@ export const ClientsPage: React.FC = () => {
             updateClient(editingClient.id, data);
             showToast('Cliente modificado exitosamente', 'success');
         } else {
-            addClient(data);
+            addClient({ ...data, storeId: activeStoreId });
             showToast('Cliente creado exitosamente', 'success');
         }
         setIsFormOpen(false);
     };
 
     return (
-        <div className="flex flex-col gap-6 h-full overflow-hidden" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto' }}>
+        <div className="flex flex-col gap-6 h-full overflow-hidden" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', paddingTop: '0.625rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -66,7 +68,7 @@ export const ClientsPage: React.FC = () => {
                     placeholder="Buscar por nombre, DUI, NIT..."
                     icon={<Search size={18} />}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e: any) => setSearchQuery(e.target.value)}
                     rightElement={searchQuery ? (
                         <Button
                             variant="ghost"

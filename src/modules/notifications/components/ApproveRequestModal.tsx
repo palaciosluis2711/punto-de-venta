@@ -126,7 +126,7 @@ export const ApproveRequestModal: React.FC<ApproveRequestModalProps> = ({
                             <textarea
                                 className="input-field"
                                 value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
+                                onChange={(e: any) => setNotes(e.target.value)}
                                 placeholder="Ej. Te envié menos piezas porque también me estoy quedando sin stock..."
                                 style={{ resize: 'none', flex: 1 }}
                             />
@@ -194,7 +194,7 @@ export const ApproveRequestModal: React.FC<ApproveRequestModalProps> = ({
                                                                 cursor: localStock <= 0 ? 'not-allowed' : 'auto'
                                                             }}
                                                             value={item.approvedQuantity}
-                                                            onChange={(e) => handleQuantityChange(item.productId, e.target.value, localStock)}
+                                                            onChange={(e: any) => handleQuantityChange(item.productId, e.target.value, localStock)}
                                                             onBlur={() => handleBlur(item.productId, item.requestedQuantity, localStock, item.approvedQuantity)}
                                                             min="0"
                                                             max={localStock}
